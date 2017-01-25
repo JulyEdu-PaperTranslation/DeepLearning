@@ -1,4 +1,6 @@
 # JULYEDU
-All JulyEDU related projects\n
-1. Teaching related\n
+All JulyEDU related projects
+
+1. Teaching related
+
 2. Paper translation
