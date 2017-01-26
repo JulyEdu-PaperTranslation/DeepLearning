@@ -1,0 +1,332 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{xeCJK}  %必须加xeCJK包
+\setCJKmainfont{AR PL UMing CN}  %换成本地字体
+\usepackage{bm}
+\usepackage{nips14submit_e,times}
+%\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[numbers]{natbib}
+\usepackage{enumitem}
+\usepackage{amsmath}  % required if you use \overset
+%\documentstyle[nips14submit_09,times,art10]{article} % For LaTeX 2.09
+\usepackage{array}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{theorem}{Theorem}
+\newtheorem*{thmnonumber}{Theorem}
+
+
+% For algorithms
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{graphicx}
+%\usepackage{wrapfigure}
+%\usepackage{savetrees}
+% Packages hyperref and algorithmic misbehave sometimes.  We can fix
+% this with the following command.
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+
+
+
+\title{条件生成式对抗网络}
+
+
+\author{
+Mehdi Mirza \\
+D\'epartement d'informatique et de recherche op\'erationnelle\\
+Universit\'e de Montr\'eal\\
+Montr\'eal, QC H3C 3J7 \\
+\texttt{mirzamom@iro.umontreal.ca}
+\AND
+Simon Osindero \\
+Flickr / Yahoo Inc. \\
+San Francisco, CA 94103 \\
+\texttt{osindero@yahoo-inc.com} \\
+翻译：张兴园(初)，路转(复)，管枫(审)\\
+}
+
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+\textbf{生成式对抗网络(GAN)}\cite{Goodfellow-et-al-NIPS2014-small}是一种用来训练生成式模型的新方法。本文中，我们在GAN的基础之上引入条件生成式对抗网络，它的构建并不复杂，只需要在生成模型与判别模型的构建中分别输入代表条件的数据y。结果显示此模型能够在类别标签条件下生成MNIST手写体数字。本文同时说明了本模型如何用来学习多模态模型，给出一个图像标记应用的初步示例，在这个示例中中我们演示了本文方法如何生成训练标签之外的描述性标签。
+\end{abstract}
+
+\section{Introduction}
+
+%-- Brief overview of adversarial nets, and a recap of the motivation for why they are useful.
+Generative adversarial nets were recently introduced as an alternative framework for training
+generative models in order to sidestep the difficulty of approximating many intractable probabilistic
+computations.
+
+Adversarial nets have the advantages that Markov chains
+are never needed, only backpropagation is used to obtain gradients,
+no inference is required during learning,
+and a wide variety of factors and interactions can easily be incorporated into the model.
+
+Furthermore, as demonstrated in \cite{Goodfellow-et-al-NIPS2014-small},
+it can produce state of the art log-likelihood estimates and realistic samples.
+
+%-- Expand motivation to conditional generative models, and explain why this is useful/interesting.
+In an unconditioned generative model, there is no control on modes of the data being generated.
+However, by conditioning the model on additional information it is possible to direct the data
+generation process. Such conditioning could be based on class labels, on some part of data
+for inpainting like \cite{goodfellow2013multi}, or even on data from different modality.
+
+%-- Summary of what we intend to demonstrate in this paper (proof of concept on MNIST and images)
+In this work we show how can we construct the conditional adversarial net. And for empirical
+results we demonstrate two set of experiment. One on MNIST digit data set conditioned on class
+labels and one on MIR Flickr 25,000 dataset \cite{huiskes08} for multi-modal learning.
+
+\section{Related Work}
+%-- \subsection{Conditional Generative Models}
+%-- TODO Do we need this?
+%-- We can probably leave conditional generative models out for now
+
+\subsection{多模态学习实现图像标记(标注)}
+
+尽管近来监督神经网络取得很大成功(尤其是卷积神经网络) \cite{Krizhevsky-2012, szegedy2014going},但是对于使用上述模型来预测极其大量的输出类别仍然是一个挑战。其次，迄今为止的大部分工作集中于学习从输入到输出的一对一映射。然而，许多有趣的问题在概率上是一对多的映射问题。例如，图像标记问题，对于给定的一副图像，可能有不同的标签，同时不同的标注者可能使用不同的（但是同义或相关的）词语来描述同一副图像。
+
+解决第一个问题的一种方式是利用其它模态的额外信息：例如，可以使用自然语言语料库来训练标签的向量表示，并保证向量之间的距离远近可以表示语义上含义的远近。在这样的空间进行预测的一个好处是，即使预测有偏差预测结果也能跟真实情况比较”接近”（比如“table”和“chair”）,同时这种方法是我们可以预测那些在训练集中没有出现的标签。工作 \cite{frome2013devise} 表明，即使一个从图像特征空间到词表示空间的简单的线性映射也能改善分类效果。
+
+解决第二个问题的方式就是使用条件概率生成模型，在这种模型中输入的是条件变量，这样以来预测一对多的映射就变成了预测条件分布。
+
+%Adversarial nets
+%were recently introduced \cite{Goodfellow-et-al-NIPS2014-small} as a novel and effective way to train stochastic generative models, and have several
+%appealing properties such as avoiding inference challenges such as explaining-away or evaluating partition functions. In this paper we explore
+%the conditional version of adversarial nets as a tool to learn multi-modal mappings from images to labels, and also exploit the fact that by making
+%predictions in a semantic feature space we are able to predict labels that were not seen during training.
+
+\cite{Srivastava+Salakhutdinov-NIPS2012-small}采用了类似的方法来解决上述问题，在MIR Flickr25,000数据集上训练了一个多模态深度玻尔兹曼机。
+
+此外，\cite{kiros2013multimodal} 中提到了如何训练一个有监督的多模态神经语言模型，同时能够生成图像的描述性句子。
+
+\section{条件对抗网络}
+\subsection{生成式对抗网络}
+生成式对抗网络是一种最近引入用来训练生成式模型的全新方式。它由两个“对抗式”模型组成：生成式模型$G$来获取数据分布，判别式模型$D$用来估计一个样本来自与训练集而不是来自于$G$的概率。$G$和$D$都是非线性映射函数，例如多层感知器。
+
+为了学习数据${\bm{x}}$的生成式分布${p_g}$, 生成器构建一个从先验噪声分布 ${p_z(z)}$ 数据空间的映射函数 ${G(z;\theta_g)}$. 判别器 ${D(x; \theta_d)}$ 则输出单个标量来表示 ${\bm{x}}$ 来自训练数据而不是 ${p_g}$ 的概率.
+
+${G}$ 和 ${D}$ 同时进行训练：我们针对 ${G}$ 调整参数来最小化 ${log(1-D(G(\bm{z}))}$ 同时针对 $D$ 调整参数来最小化 ${logD(X)}$, 如同两个玩家使用如下的价值函数 ${V(G, D)}$ 玩最小最大游戏:
+
+
+\begin{equation}
+\label{eq:minimaxgame-definition}
+\min_G \max_D V(D, G) = \mathbb{E}_{\bm{x} \sim p_{\text{data}}(\bm{x})}[\log D(\bm{x})] + \mathbb{E}_{\bm{z} \sim p_z(\bm{z})}[\log (1 - D(G(\bm{z})))].
+\end{equation}
+
+
+\subsection{条件对抗网}
+
+如果生成器和判别器都共同的额外条件变量${\bm{y}}$，生成式对抗网络就可以够扩展成条件模型.${\bm{y}}$可以是任何类型的辅助信息，比如类别标签或者其他模态的数据。我们通过将${\bm{y}}$作为额外输入层导入到判别器和生成器来实现条件模型。
+
+
+在生成器中，先验输入的噪声 $p_{\bm{z}}(\bm{z})$ 和 ${\bm{y}}$在隐藏层中相结合，这使得对抗网络训练框架在如何构成隐藏层方面具有了很大的灵活性。\footnote{在本文中，我们只考虑条件变量与先验噪音共同作为多层感知器的单一隐藏层的输入的情形。但是条件变量与先验噪音的高层交互作用可以产生更复杂的生成器，而这种交互在传统的生成器中是很难实现的}
+
+在判别器中 ${\bm{x}}$ 和 ${\bm{y}}$ 共同做为判别函数的输入(这里仍然考虑在MLP中进行实现的情形).
+
+此处双玩家最小最大游戏的目标函数如下\ref{eq:minimaxgame-definition-conditioned}:
+\begin{equation}
+\label{eq:minimaxgame-definition-conditioned}
+\min_G \max_D V(D, G) = \mathbb{E}_{\bm{x} \sim p_{\text{data}}(\bm{x})}[\log D(\bm{x} | \bm{y})] + \mathbb{E}_{\bm{z} \sim p_z(\bm{z})}[\log (1 - D(G(\bm{z} | \bm{y})))].
+\end{equation}
+
+图 \ref{fig:diagram} 展示了简单的条件对抗网络的结构.
+
+\begin{figure}[h]
+\centering
+    \includegraphics[width=0.9\textwidth]{diagram.pdf}
+    \caption{\small 条件对抗网络}
+\label{fig:diagram}
+\end{figure}
+
+
+\section{实验结果}
+\subsection{单模态}
+
+本文使用标签类别作为条件变量，对编码成one-hot向量的MNIST图像进行条件对抗网络的训练。
+
+在生成式网络部分，我们从单位超立方体上的均匀分布中提取100维的先验噪音${\bm{z}}$。先通过激活函数ReLu(Rectified Linear Unit)\cite{glorot2011deep, Jarrett-ICCV2009-small}把先验噪音${\bm{z}}$和条件变量${\bm{y}}$映射到尺寸分别为200和1000的隐藏层，然后把这两个再映射到1200维的组合ReLu隐藏层，最终在输出层使用sigmoid单元层来生成784维MNIST样本。
+
+判别器把 ${\bm{x}}$ 映射到具有240个单元5块的maxout \cite{Goodfellow_maxout_2013} 层, 把 ${\bm{y}}$ 映射到具有50个单元5块的maxout层. 然后把这两个隐藏层都映射到一个具有240个单元4块的联合隐藏maxout层，最后再把这个层的输出导入sigmoid层. (判别器的具体构造并不关键，只要它具有相当的判别能力就可以，我们实践发现maxout 单元比较适合这个任务)
+
+模型的训练使用随机梯度下降法，其中每个mini-batch的大小为100，学习率初始值为 $0.1$，然后以$1.00004$的下降率指数下降到$.000001$，同时初始动量为 $.5$,最终增长至$0.7$. 为了防止过度拟合，我们在生成器和判别器中的都使用了概率为$0.5$的Dropout层\cite{Hinton-et-al-arxiv2012}.
+
+表格\ref{table:parzen}给出了对于MNIST 数据集的测试数据做的 Gaussian Parzen window 对数-似然估计结果。我们从十个类别中每个类别抽取出来1000个样本进行了Gaussian Parzen window拟合，然后使用Parzen window分布对这个测试集进行对数似然估计。(\cite{Goodfellow-et-al-NIPS2014-small}中有关于如何构造这个估计的更详细讨论)
+
+我们这里使用条件对抗网络得到的结果与一些基于network的构架得出的结果相当，但是却不如一些其他的方法(比如非条件对抗网络).我们此处的结果更多的是作为一个概念验证，但是相信对超参数以及架构的进一步探索可以使得条件生成网络最终达到或者超过非条件生成网络的水平.
+
+图 \ref{fig:mnist} 给出了一些生成的样本. 每一行代表一个条件标签，而每一列代表一个生成样本.
+
+\begin{table}
+	\centering
+	\begin{tabular}{c|c}
+	Model & MNIST  \\
+	\hline
+	DBN~\citep{Bengio-et-al-ICML2013} & $138 \pm 2$  \\
+	Stacked CAE~\citep{Bengio-et-al-ICML2013} & $121 \pm 1.6$ \\
+	Deep GSN~\citep{Bengio-et-al-ICML-2014} & $214 \pm 1.1$ \\
+	Adversarial nets & $225 \pm 2$ \\
+	Conditional adversarial nets & $132 \pm 1.8$
+	\end{tabular}
+	\caption{\small
+	基于Parzen window 对MNIST进行的对数似然估计. 我们使用了和
+	\cite{Goodfellow-et-al-NIPS2014-small} 中相同的方法来进行计算.}
+	\label{table:parzen}
+\end{table}
+
+
+
+\begin{figure}[h]
+	\centering
+	    \includegraphics[width=0.9\textwidth]{mnist.png}
+	    \caption{\small 生成的 MNIST 手写数据样本，每一行代表一个标签}
+	\label{fig:mnist}
+\end{figure}
+
+
+
+\subsection{Multimodal}
+Photo sites such as Flickr are a rich source of labeled data in the form of images and
+their associated user-generated metadata (UGM) --- in particular user-tags.
+类似于Flickr 这样的照片网站提供了大量的带标记图像数据以及相关的用户生成的元数据（UGM）特别是用户标签。
+
+User-generated metadata differ from more `canonical' image labelling schems in that they are typically
+more descriptive, and are semantically much closer to how humans describe images with natural language
+rather than just identifying the objects present in an image. Another aspect of UGM is that synoymy is
+prevalent and different users may use different vocabulary to describe the same concepts --- consequently,
+having an efficient way to normalize these labels becomes important. Conceptual word embeddings \cite{mikolov-et-al-iclr2013}
+can be very useful here since related concepts end up being represented by similar vectors.
+
+用户生成的元数据不同于“规范的”图像标记，因为他们更具有描述性，同时在语义上与人类使用自然语言而不是识别图像中存在的目标实现对图像进行描述更加接近。UGM的另一个方面是同义词非常普遍，同时不同的用户可能使用不同的词汇来描述同一个概念。因此，使用有效的方法来标准化这些标签也就变得非常重要。概念词嵌入方法\cite{mikolov-et-al-iclr2013}就很有效，因为这种方法使得相关的概念最终由相似的向量表示。
+
+In this section we demonstrate automated tagging of images, with multi-label predictions,
+using conditional adversarial nets to generate a (possibly multi-modal) distribution
+of tag-vectors conditional on image features.
+
+我们在本节中以图像特征为条件变量，使用条件生成网络来生成标签向量的条件分布。并以此实现图像的多标签自动标注。
+
+%If we could learn a multi-modal model on user tags and images we could have better automated
+%tags for images, or even better automated retrieval from more descriptive search queries.
+%Here we demonstrate automated tagging user conditional adversarial nets. We train our models
+%to generate word representations of tags given image features.
+
+For image features we pre-train a convolutional model similar to the one from \cite{Krizhevsky-2012}
+on the full ImageNet dataset with 21,000 labels \cite{RussakovskyFeiFei}.
+We use the output of the last fully connected layer with 4096 units as image representations.
+
+对于图像特征，我们预先在带有21,000个标签的完整ImageNet数据集\cite{RussakovskyFeiFei}上训练一个类似于\cite{Krizhevsky-2012}中的卷积模型。然后使用其具有4096个单元的最后一个全连接层对图像特征进行表示。
+
+For the world representation we first gather a corpus of text from concatenation of user-tags, titles and descriptions from
+YFCC100M \footnote{Yahoo Flickr Creative Common 100M \url{http://webscope.sandbox.yahoo.com/catalog.php?datatype=i&did=67}.}
+dataset metadata. After pre-processing and cleaning of the text we trained a
+skip-gram model \cite{mikolov-et-al-iclr2013} with word vector size of 200. And we omitted any word appearing
+less than 200 times from the vocabulary,  thereby ending up with a dictionary of size 247465.
+
+
+对于单词表示，首先从YFCC100M\footnote{Yahoo Flickr Creative Common 100M \url{http://webscope.sandbox.yahoo.com/catalog.php?datatype=i&did=67}.}元数据集中收集了一个混合了用户标签、标题以及描述文本的语料库。经过预处理和文档清理，本文使用大小为200的单词向量进行skip-gram模型拟合。我们过滤掉出现次数少于200次的单词，从而得到一个最终大小为247465的单词表.
+
+We keep the convolutional model and the language model fixed during training of the adversarial net.
+And leave the experiments when we even backpropagate through these models as future work.
+
+我们在训练对抗网络时保持这个卷积模型和语言模型，并把基于这些模型的反向传播算法实验留作今后的工作。
+
+For our experiments we use MIR Flickr 25,000 dataset \cite{huiskes08}, and extract the image and
+tags features using the convolutional model and language model we described above.
+Images without any tag were omitted from our experiments and annotations were treated as extra tags.
+The first 150,000 examples were used as training set.
+Images with multiple tags were repeated inside the training set once for each associated tag.
+
+本文的实验对MIR Flickr 25,000数据集\cite{huiskes08}，使用如上的卷积模型与语言模型提取了图像与标注特征。我们在实验中过滤掉了没有任何标注的图像，而将附注(annotations)作为额外的标注。实验选取前150,000个例子作为训练集.有多个标注的图像在训练集中重复出现(每一个标注重复一次)。
+
+For evaluation, we generate 100 samples for each image and find top 20 closest words
+using cosine similarity of vector representation of the words in the vocabulary to each sample.
+Then we select the top 10 most common words among all 100 samples.
+Table \ref{table:samples} shows some samples of the user
+assigned tags and annotations along with the generated tags.
+
+作为测试，我们对每个图像生成100个样本，并且在每一个样本中使用余弦相似函数选取前20个最接近的词语。然后在100个样本中选取前10个出现最多的词。表格\ref{table:samples}给出了一些用户标注与附注跟生成标注的对比。
+
+%We could potentially limit the vocabulary of the language model to only those that appear in the tags, in
+%oder to evaluate model's recall measure.[TODO, should we put this?!] Due to noisiness and limited nature of the user tags, we found often
+%times even generated samples are generating tags that describe the image correctly with out of tags vocabulary, which
+%is one of the main benefits of this model.
+
+The best working model's generator receives Gaussian noise of size 100 as noise prior and maps it to 500 dimension ReLu layer.
+And maps 4096 dimension image feature vector to 2000 dimension ReLu hidden layer.
+Both of these layers are mapped to a joint representation of 200 dimension linear layer which would output the generated word vectors.
+
+The discriminator is consisted of 500 and 1200 dimension ReLu hidden layers for word vectors
+and image features respectively and maxout layer with 1000 units and 3 pieces as the join layer which is finally fed to
+the one single sigmoid unit.
+
+The model was trained using stochastic gradient decent with mini-batches of size 100
+and initial learning rate of $0.1$
+which was exponentially decreased down to $.000001$ with decay factor of $1.00004$.
+Also momentum was used with initial value of $.5$ which was increased up to $0.7$.
+Dropout with probability of 0.5 was applied to both the generator and discriminator.
+
+The hyper-parameters and architectural choices were obtained by cross-validation
+ and a mix of random grid search and manual selection (albeit over a somewhat limited search space.)
+
+\begin{table}[h]
+\begin{tabular} {l | b{3.7cm} | b{3.7cm}}
+  & User tags + annotations & Generated tags \\
+ \hline
+ \includegraphics[width=0.33\textwidth, height=0.12\textheight]{track.jpg} & montanha, trem, inverno, frio, people, male, plant life, tree, structures, transport, car & taxi, passenger, line, transportation, railway station, passengers, railways, signals, rail, rails \\
+ \includegraphics[width=0.33\textwidth, height=0.12\textheight]{cake.jpg} & food, raspberry, delicious, homemade & chicken, fattening, cooked, peanut, cream, cookie, house made, bread, biscuit, bakes \\
+
+ \includegraphics[width=0.33\textwidth, height=0.12\textheight]{river.jpg} & water, river & creek, lake, along, near, river, rocky, treeline, valley, woods, waters \\
+
+ \includegraphics[width=0.33\textwidth, height=0.12\textheight]{baby.jpg} & people, portrait, female, baby, indoor & love, people, posing, girl, young, strangers, pretty, women, happy, life \\
+\end{tabular}
+\label{table:samples}
+\caption{Samples of generated tags}
+\end{table}
+
+\section{Future Work}
+The results shown in this paper are extremely preliminary, but they demonstrate the potential of
+conditional adversarial nets and show promise for interesting and useful applications.
+
+In future explorations between now and the workshop we expect to present more sophisticated models,
+as well as a more detailed and thorough analysis of their performance and characteristics.
+
+%Also for many of the images, combination of their tags are more descriptive than single tags.
+
+Also, in the current experiments we only use each tag individually.
+But by using multiple tags at the same time (effectively posing generative problem as one of `set generation')
+we hope to achieve better results.
+
+Another obvious direction left for future work is to construct a joint training scheme to learn the language model. Works such as
+\cite{kiros2013multimodal} has shown that we can learn a language model for suited for the specific task.
+
+
+\subsubsection*{Acknowledgments}
+This project was developed in
+Pylearn2~\citep{goodfellow2013pylearn2} framework, and we would like to thank Pylearn2 developers. 
+We also like to thank Ian Goodfellow for helpful discussion during his affiliation at University of Montreal.
+The authors gratefully acknowledge the support from the Vision \& Machine Learning, and Production
+Engineering teams at Flickr (in alphabetical order: Andrew Stadlen, Arel Cordero, Clayton Mellina,
+Cyprien Noel, Frank Liu, Gerry Pesavento, Huy Nguyen, Jack Culpepper, John Ko, Pierre Garrigues,
+Rob Hess, Stacey Svetlichnaya, Tobi Baumgartner, and Ye Lu).
+
+
+\small{
+\bibliography{strings,strings-shorter,ml}
+\bibliographystyle{natbib}}
+
+
+\end{document}
