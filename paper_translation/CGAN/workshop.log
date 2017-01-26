@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99992 (TeX Live 2015/Debian) (preloaded format=xelatex 2017.1.12)  23 JAN 2017 00:04
+This is XeTeX, Version 3.14159265-2.6-0.99992 (TeX Live 2015/Debian) (preloaded format=xelatex 2017.1.12)  26 JAN 2017 01:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1133,32 +1133,25 @@ LaTeX Font Info:    No file EU1pcr.fd. on input line 62.
 LaTeX Font Warning: Font shape `EU1/pcr/m/n' undefined
 (Font)              using `EU1/lmr/m/n' instead on input line 62.
 
-[1
+
+Underfull \vbox (badness 1371) has occurred while \output is active []
+
+ [1
 
 ]
+[2]
 File: diagram.pdf Graphic file (type QTm)
- <use  "diagram.pdf" >
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Underfull \vbox (badness 4832) has occurred while \output is active []
-
- [2]
-Underfull \vbox (badness 7133) has occurred while \output is active []
-
- [3]
+ <use  "diagram.pdf" > [3]
 File: mnist.png Graphic file (type QTm)
-
-<use  "mnist.png" > [4]
-Underfull \hbox (badness 1789) in paragraph at lines 234--234
+ <use  "mnist.png" > [4]
+Underfull \hbox (badness 1789) in paragraph at lines 242--242
 [][]\EU1/pcr/m/n/9 Yahoo Flickr Creative Common 100M $[][][][] [] [] [] [][][][
 ][][][][] [] [][][][][][][] [] [][][][][] [] [][][] [] [][][][][][][] [] [][][]
  []
  []
 
 
-Underfull \hbox (badness 1789) in paragraph at lines 240--240
+Underfull \hbox (badness 1789) in paragraph at lines 248--248
 [][]\EU1/pcr/m/n/9 Yahoo Flickr Creative Common 100M $[][][][] [] [] [] [][][][
 ][][][][] [] [][][][][][][] [] [][][][][] [] [][][] [] [][][][][][][] [] [][][]
  []
@@ -1167,65 +1160,65 @@ Underfull \hbox (badness 1789) in paragraph at lines 240--240
 [5]
 File: track.jpg Graphic file (type QTm)
  <use  "track.jpg" >
-Underfull \hbox (badness 7030) in paragraph at lines 289--289
+Underfull \hbox (badness 7030) in paragraph at lines 305--305
 []|\EU1/pcr/m/n/10 montanha, trem, in-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 289--289
+Underfull \hbox (badness 10000) in paragraph at lines 305--305
 \EU1/pcr/m/n/10 verno, frio, people,
  []
 
 
-Underfull \hbox (badness 1424) in paragraph at lines 289--289
+Underfull \hbox (badness 1424) in paragraph at lines 305--305
 \EU1/pcr/m/n/10 male, plant life, tree,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 289--289
+Underfull \hbox (badness 10000) in paragraph at lines 305--305
 \EU1/pcr/m/n/10 structures, transport,
  []
 
 
-Underfull \hbox (badness 5637) in paragraph at lines 289--290
+Underfull \hbox (badness 5637) in paragraph at lines 305--306
 []|\EU1/pcr/m/n/10 taxi, passenger, line,
  []
 
 
-Underfull \hbox (badness 1048) in paragraph at lines 289--290
+Underfull \hbox (badness 1048) in paragraph at lines 305--306
 \EU1/pcr/m/n/10 transportation, railway
  []
 
 File: cake.jpg Graphic file (type QTm)
 <use  "cake.jpg" >
-Underfull \hbox (badness 3792) in paragraph at lines 290--290
+Underfull \hbox (badness 3792) in paragraph at lines 306--306
 []|\EU1/pcr/m/n/10 food, raspberry, deli-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 290--291
+Underfull \hbox (badness 10000) in paragraph at lines 306--307
 []|\EU1/pcr/m/n/10 chicken, fattening,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 290--291
+Underfull \hbox (badness 10000) in paragraph at lines 306--307
 \EU1/pcr/m/n/10 cookie, house made,
  []
 
 File: river.jpg Graphic file (type QTm)
 <use  "river.jpg" >
-Underfull \hbox (badness 4556) in paragraph at lines 292--293
+Underfull \hbox (badness 4556) in paragraph at lines 308--309
 \EU1/pcr/m/n/10 river, rocky, treeline,
  []
 
 File: baby.jpg Graphic file (type QTm)
 <use  "baby.jpg" >
-Underfull \hbox (badness 6995) in paragraph at lines 294--295
+Underfull \hbox (badness 6995) in paragraph at lines 310--311
 []|\EU1/pcr/m/n/10 love, people, posing,
  []
 
 
-Underfull \hbox (badness 1412) in paragraph at lines 294--295
+Underfull \hbox (badness 1412) in paragraph at lines 310--311
 \EU1/pcr/m/n/10 girl, young, strangers,
  []
 
@@ -1238,7 +1231,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 LaTeX Font Warning: Font shape `EU1/ptm/m/it' undefined
 (Font)              using `EU1/ptm/m/n' instead on input line 7.
 
-) [7] (./workshop.aux)
+[7]) [8] (./workshop.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
@@ -1246,10 +1239,10 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 Here is how much of TeX's memory you used:
  20212 strings out of 493638
  387741 string characters out of 6146796
- 400253 words of memory out of 5000000
+ 401253 words of memory out of 5000000
  23434 multiletter control sequences out of 15000+600000
  13723 words of font info for 66 fonts, out of 8000000 for 9000
  1328 hyphenation exceptions out of 8191
  54i,12n,72p,10455b,293s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on workshop.pdf (7 pages).
+Output written on workshop.pdf (8 pages).

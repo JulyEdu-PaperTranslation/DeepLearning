@@ -71,14 +71,18 @@ San Francisco, CA 94103 \\
 Generative adversarial nets were recently introduced as an alternative framework for training
 generative models in order to sidestep the difficulty of approximating many intractable probabilistic
 computations.
+生成对抗网络(GAN)是最新引入的一种用来训练生成模型的方法，它可以有效的绕过一些其他方法所很难避免的困难的概率计算。
 
 Adversarial nets have the advantages that Markov chains
 are never needed, only backpropagation is used to obtain gradients,
 no inference is required during learning,
 and a wide variety of factors and interactions can easily be incorporated into the model.
+生成网络中不再需要马尔科夫链，而只需要用回溯法就可以计算优化步骤中所需要的梯度向量。在模型训练中也不再需要统计推断，这种方法使得其所训练的模型可以很容易就囊括各种不同类型的信息。
 
 Furthermore, as demonstrated in \cite{Goodfellow-et-al-NIPS2014-small},
 it can produce state of the art log-likelihood estimates and realistic samples.
+
+而且，如文章\cite{Goodfellow-et-al-NIPS2014-small}所述，GAN可以实现目前最好的对数似然估计以及生成样本。
 
 %-- Expand motivation to conditional generative models, and explain why this is useful/interesting.
 In an unconditioned generative model, there is no control on modes of the data being generated.
@@ -86,10 +90,14 @@ However, by conditioning the model on additional information it is possible to d
 generation process. Such conditioning could be based on class labels, on some part of data
 for inpainting like \cite{goodfellow2013multi}, or even on data from different modality.
 
+在非条件生成模型中，无法控制其生成数据的模式。然而，使用附加信息作为模型的条件变量，可以引导生成模型的数据生成。这些条件变量可以来自于类别标签，也可以来自于待修复数据的其他部分\cite{goodfellow2013multi}，或者甚至来自于其他模态的数据。
+
 %-- Summary of what we intend to demonstrate in this paper (proof of concept on MNIST and images)
 In this work we show how can we construct the conditional adversarial net. And for empirical
 results we demonstrate two set of experiment. One on MNIST digit data set conditioned on class
 labels and one on MIR Flickr 25,000 dataset \cite{huiskes08} for multi-modal learning.
+
+本文中我们
 
 \section{Related Work}
 %-- \subsection{Conditional Generative Models}
@@ -269,9 +277,13 @@ The best working model's generator receives Gaussian noise of size 100 as noise 
 And maps 4096 dimension image feature vector to 2000 dimension ReLu hidden layer.
 Both of these layers are mapped to a joint representation of 200 dimension linear layer which would output the generated word vectors.
 
+表现最好的模型的生成器使用的是如下配置：以100个单位的高斯噪音为先验噪音，然后映射到500维的ReLu层.把4096维的图像特征向量映射到2000维的ReLu隐藏层.这两个ReLu层都映射到一个200维的线性混合表示层，而由这一层来输出词语向量。
+
 The discriminator is consisted of 500 and 1200 dimension ReLu hidden layers for word vectors
 and image features respectively and maxout layer with 1000 units and 3 pieces as the join layer which is finally fed to
 the one single sigmoid unit.
+
+判别器包含500维的词语向量隐藏层和1200维的图像特征ReLu隐藏层，这两层映射到一个1000个单元与3块的maxout层，然后最终导入到一个单sigmoid单元，并输出判断.
 
 The model was trained using stochastic gradient decent with mini-batches of size 100
 and initial learning rate of $0.1$
@@ -279,8 +291,12 @@ which was exponentially decreased down to $.000001$ with decay factor of $1.0000
 Also momentum was used with initial value of $.5$ which was increased up to $0.7$.
 Dropout with probability of 0.5 was applied to both the generator and discriminator.
 
+模型的优化使用的是随机梯度下降法，配置为:100单元的mini-batches,初始学习率为$0.1$并以$1.00004$的下降率指数下降到$.000001$,初始动量为$.5$并最终上升到$0.7$.生成器与判别器都使用概率为$0.5$的Dropout层.
+
 The hyper-parameters and architectural choices were obtained by cross-validation
  and a mix of random grid search and manual selection (albeit over a somewhat limited search space.)
+
+超参数与构架选取中使用了交叉验证以及网格查找和人工手动选择.
 
 \begin{table}[h]
 \begin{tabular} {l | b{3.7cm} | b{3.7cm}}
@@ -301,8 +317,12 @@ The hyper-parameters and architectural choices were obtained by cross-validation
 The results shown in this paper are extremely preliminary, but they demonstrate the potential of
 conditional adversarial nets and show promise for interesting and useful applications.
 
+本文展示的结果都很初等，但是他们一方面显示了条件生成网络的潜力，另一方面这些结果本身也是很有趣并具有实用价值的应用.
+
 In future explorations between now and the workshop we expect to present more sophisticated models,
 as well as a more detailed and thorough analysis of their performance and characteristics.
+
+我们将会在探索更多更复杂的模型，并且对这些模型的表现与特点进行更深入的分析.
 
 %Also for many of the images, combination of their tags are more descriptive than single tags.
 
@@ -310,9 +330,12 @@ Also, in the current experiments we only use each tag individually.
 But by using multiple tags at the same time (effectively posing generative problem as one of `set generation')
 we hope to achieve better results.
 
+而且在我们目前的实验中，每一个标签都作为独立的条件变量。我们期待更进一步的研究中，如果我们把多个标签联合起来使用将会得到更好的结果。
+
 Another obvious direction left for future work is to construct a joint training scheme to learn the language model. Works such as
 \cite{kiros2013multimodal} has shown that we can learn a language model for suited for the specific task.
 
+另外一个将来可以探索的方向是为语言模型创建一个混合训练机制.类似于\cite{kiros2013multimodal}的很多工作都证实可以针对特别的任务训练有针对性的语言模型。
 
 \subsubsection*{Acknowledgments}
 This project was developed in
@@ -323,6 +346,7 @@ Engineering teams at Flickr (in alphabetical order: Andrew Stadlen, Arel Cordero
 Cyprien Noel, Frank Liu, Gerry Pesavento, Huy Nguyen, Jack Culpepper, John Ko, Pierre Garrigues,
 Rob Hess, Stacey Svetlichnaya, Tobi Baumgartner, and Ye Lu).
 
+这个项目是在Pylearn2~\citep{goodfellow2013pylearn2}的构架下完成的，我们再此对 Pylearn2的开发人员表示感谢.我们还要感谢Ian Goodfellow 在University of Montreal时与我们进行的讨论。我们还要感谢来自于
 
 \small{
 \bibliography{strings,strings-shorter,ml}
