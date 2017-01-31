@@ -1,6 +1,1 @@
-# JULYEDU
-All JulyEDU related projects
-
-1. Teaching related
-
-2. Paper translation
+CGAN:张兴园 (初),路转 (复),管枫 (审)
