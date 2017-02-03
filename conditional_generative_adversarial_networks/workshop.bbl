@@ -1,0 +1,119 @@
+\begin{thebibliography}{}
+
+\bibitem[Bengio {\em et~al.}(2013)Bengio, Mesnil, Dauphin, and
+  Rifai]{Bengio-et-al-ICML2013}
+Bengio, Y., Mesnil, G., Dauphin, Y., and Rifai, S. (2013).
+\newblock Better mixing via deep representations.
+\newblock In {\em ICML'2013\/}.
+
+\bibitem[Bengio {\em et~al.}(2014)Bengio, Thibodeau-Laufer, Alain, and
+  Yosinski]{Bengio-et-al-ICML-2014}
+Bengio, Y., Thibodeau-Laufer, E., Alain, G., and Yosinski, J. (2014).
+\newblock Deep generative stochastic networks trainable by backprop.
+\newblock In {\em Proceedings of the 30th International Conference on Machine
+  Learning (ICML'14)\/}.
+
+\bibitem[Frome {\em et~al.}(2013)Frome, Corrado, Shlens, Bengio, Dean, Mikolov,
+  {\em et~al.}]{frome2013devise}
+Frome, A., Corrado, G.~S., Shlens, J., Bengio, S., Dean, J., Mikolov, T., {\em
+  et~al.} (2013).
+\newblock Devise: A deep visual-semantic embedding model.
+\newblock In {\em Advances in Neural Information Processing Systems\/}, pages
+  2121--2129.
+
+\bibitem[Glorot {\em et~al.}(2011)Glorot, Bordes, and Bengio]{glorot2011deep}
+Glorot, X., Bordes, A., and Bengio, Y. (2011).
+\newblock Deep sparse rectifier neural networks.
+\newblock In {\em International Conference on Artificial Intelligence and
+  Statistics\/}, pages 315--323.
+
+\bibitem[Goodfellow {\em et~al.}(2013a)Goodfellow, Mirza, Courville, and
+  Bengio]{goodfellow2013multi}
+Goodfellow, I., Mirza, M., Courville, A., and Bengio, Y. (2013a).
+\newblock Multi-prediction deep boltzmann machines.
+\newblock In {\em Advances in Neural Information Processing Systems\/}, pages
+  548--556.
+
+\bibitem[Goodfellow {\em et~al.}(2013b)Goodfellow, Warde-Farley, Mirza,
+  Courville, and Bengio]{Goodfellow_maxout_2013}
+Goodfellow, I.~J., Warde-Farley, D., Mirza, M., Courville, A., and Bengio, Y.
+  (2013b).
+\newblock Maxout networks.
+\newblock In {\em ICML'2013\/}.
+
+\bibitem[Goodfellow {\em et~al.}(2013c)Goodfellow, Warde-Farley, Lamblin,
+  Dumoulin, Mirza, Pascanu, Bergstra, Bastien, and
+  Bengio]{goodfellow2013pylearn2}
+Goodfellow, I.~J., Warde-Farley, D., Lamblin, P., Dumoulin, V., Mirza, M.,
+  Pascanu, R., Bergstra, J., Bastien, F., and Bengio, Y. (2013c).
+\newblock Pylearn2: a machine learning research library.
+\newblock {\em arXiv preprint arXiv:1308.4214\/}.
+
+\bibitem[Goodfellow {\em et~al.}(2014)Goodfellow, Pouget-Abadie, Mirza, Xu,
+  Warde-Farley, Ozair, Courville, and Bengio]{Goodfellow-et-al-NIPS2014-small}
+Goodfellow, I.~J., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D.,
+  Ozair, S., Courville, A., and Bengio, Y. (2014).
+\newblock Generative adversarial nets.
+\newblock In {\em NIPS'2014\/}.
+
+\bibitem[Hinton {\em et~al.}(2012)Hinton, Srivastava, Krizhevsky, Sutskever,
+  and Salakhutdinov]{Hinton-et-al-arxiv2012}
+Hinton, G.~E., Srivastava, N., Krizhevsky, A., Sutskever, I., and
+  Salakhutdinov, R. (2012).
+\newblock Improving neural networks by preventing co-adaptation of feature
+  detectors.
+\newblock Technical report, arXiv:1207.0580.
+
+\bibitem[Huiskes and Lew(2008)Huiskes and Lew]{huiskes08}
+Huiskes, M.~J. and Lew, M.~S. (2008).
+\newblock The mir flickr retrieval evaluation.
+\newblock In {\em MIR '08: Proceedings of the 2008 ACM International Conference
+  on Multimedia Information Retrieval\/}, New York, NY, USA. ACM.
+
+\bibitem[Jarrett {\em et~al.}(2009)Jarrett, Kavukcuoglu, Ranzato, and
+  {LeCun}]{Jarrett-ICCV2009-small}
+Jarrett, K., Kavukcuoglu, K., Ranzato, M., and {LeCun}, Y. (2009).
+\newblock What is the best multi-stage architecture for object recognition?
+\newblock In {\em ICCV'09\/}.
+
+\bibitem[Kiros {\em et~al.}(2013)Kiros, Zemel, and
+  Salakhutdinov]{kiros2013multimodal}
+Kiros, R., Zemel, R., and Salakhutdinov, R. (2013).
+\newblock Multimodal neural language models.
+\newblock In {\em Proc. NIPS Deep Learning Workshop\/}.
+
+\bibitem[Krizhevsky {\em et~al.}(2012)Krizhevsky, Sutskever, and
+  Hinton]{Krizhevsky-2012}
+Krizhevsky, A., Sutskever, I., and Hinton, G. (2012).
+\newblock {ImageNet} classification with deep convolutional neural networks.
+\newblock In {\em Advances in Neural Information Processing Systems 25
+  (NIPS'2012)\/}.
+
+\bibitem[Mikolov {\em et~al.}(2013)Mikolov, Chen, Corrado, and
+  Dean]{mikolov-et-al-iclr2013}
+Mikolov, T., Chen, K., Corrado, G., and Dean, J. (2013).
+\newblock Efficient estimation of word representations in vector space.
+\newblock In {\em International Conference on Learning Representations:
+  Workshops Track\/}.
+
+\bibitem[Russakovsky and Fei-Fei(2010)Russakovsky and
+  Fei-Fei]{RussakovskyFeiFei}
+Russakovsky, O. and Fei-Fei, L. (2010).
+\newblock Attribute learning in large-scale datasets.
+\newblock In {\em European Conference of Computer Vision (ECCV), International
+  Workshop on Parts and Attributes\/}, Crete, Greece.
+
+\bibitem[Srivastava and Salakhutdinov(2012)Srivastava and
+  Salakhutdinov]{Srivastava+Salakhutdinov-NIPS2012-small}
+Srivastava, N. and Salakhutdinov, R. (2012).
+\newblock Multimodal learning with deep boltzmann machines.
+\newblock In {\em NIPS'2012\/}.
+
+\bibitem[Szegedy {\em et~al.}(2014)Szegedy, Liu, Jia, Sermanet, Reed, Anguelov,
+  Erhan, Vanhoucke, and Rabinovich]{szegedy2014going}
+Szegedy, C., Liu, W., Jia, Y., Sermanet, P., Reed, S., Anguelov, D., Erhan, D.,
+  Vanhoucke, V., and Rabinovich, A. (2014).
+\newblock Going deeper with convolutions.
+\newblock {\em arXiv preprint arXiv:1409.4842\/}.
+
+\end{thebibliography}
