@@ -1,0 +1,162 @@
+\begin{thebibliography}{24}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Bengio \& Glorot(2010)Bengio and Glorot]{glorot-difficulty}
+Bengio, Yoshua and Glorot, Xavier.
+\newblock Understanding the difficulty of training deep feedforward neural
+  networks.
+\newblock In \emph{Proceedings of AISTATS 2010}, volume~9, pp.\  249--256, May
+  2010.
+
+\bibitem[Dean et~al.(2012)Dean, Corrado, Monga, Chen, Devin, Le, Mao, Ranzato,
+  Senior, Tucker, Yang, and Ng]{dist-belief}
+Dean, Jeffrey, Corrado, Greg~S., Monga, Rajat, Chen, Kai, Devin, Matthieu, Le,
+  Quoc~V., Mao, Mark~Z., Ranzato, Marc'Aurelio, Senior, Andrew, Tucker, Paul,
+  Yang, Ke, and Ng, Andrew~Y.
+\newblock Large scale distributed deep networks.
+\newblock In \emph{NIPS}, 2012.
+
+\bibitem[Desjardins \& Kavukcuoglu()Desjardins and Kavukcuoglu]{desjardins}
+Desjardins, Guillaume and Kavukcuoglu, Koray.
+\newblock Natural neural networks.
+\newblock (unpublished).
+
+\bibitem[Duchi et~al.(2011)Duchi, Hazan, and Singer]{adagrad}
+Duchi, John, Hazan, Elad, and Singer, Yoram.
+\newblock Adaptive subgradient methods for online learning and stochastic
+  optimization.
+\newblock \emph{J. Mach. Learn. Res.}, 12:\penalty0 2121--2159, July 2011.
+\newblock ISSN 1532-4435.
+
+\bibitem[G{\"{u}}l{\c{c}}ehre \& Bengio(2013)G{\"{u}}l{\c{c}}ehre and
+  Bengio]{gulcehre}
+G{\"{u}}l{\c{c}}ehre, {\c{C}}aglar and Bengio, Yoshua.
+\newblock Knowledge matters: Importance of prior information for optimization.
+\newblock \emph{CoRR}, abs/1301.4083, 2013.
+
+\bibitem[{He} et~al.(2015){He}, {Zhang}, {Ren}, and {Sun}]{msr}
+{He}, K., {Zhang}, X., {Ren}, S., and {Sun}, J.
+\newblock {Delving Deep into Rectifiers: Surpassing Human-Level Performance on
+  ImageNet Classification}.
+\newblock \emph{ArXiv e-prints}, February 2015.
+
+\bibitem[Hyv\"{a}rinen \& Oja(2000)Hyv\"{a}rinen and Oja]{ica}
+Hyv\"{a}rinen, A. and Oja, E.
+\newblock Independent component analysis: Algorithms and applications.
+\newblock \emph{Neural Netw.}, 13\penalty0 (4-5):\penalty0 411--430, May 2000.
+
+\bibitem[Jiang(2008)]{domain-adaptation-survey}
+Jiang, Jing.
+\newblock A literature survey on domain adaptation of statistical classifiers,
+  2008.
+
+\bibitem[LeCun et~al.(1998{\natexlab{a}})LeCun, Bottou, Bengio, and
+  Haffner]{mnist}
+LeCun, Y., Bottou, L., Bengio, Y., and Haffner, P.
+\newblock Gradient-based learning applied to document recognition.
+\newblock \emph{Proceedings of the IEEE}, 86\penalty0 (11):\penalty0
+  2278--2324, November 1998{\natexlab{a}}.
+
+\bibitem[LeCun et~al.(1998{\natexlab{b}})LeCun, Bottou, Orr, and
+  Muller]{lecun-backprop}
+LeCun, Y., Bottou, L., Orr, G., and Muller, K.
+\newblock Efficient backprop.
+\newblock In Orr, G. and K., Muller (eds.), \emph{Neural Networks: Tricks of
+  the trade}. Springer, 1998{\natexlab{b}}.
+
+\bibitem[Lyu \& Simoncelli(2008)Lyu and Simoncelli]{lyu-simoncelli}
+Lyu, S and Simoncelli, E~P.
+\newblock Nonlinear image representation using divisive normalization.
+\newblock In \emph{Proc. Computer Vision and Pattern Recognition}, pp.\  1--8.
+  IEEE Computer Society, Jun 23-28 2008.
+\newblock \doi{10.1109/CVPR.2008.4587821}.
+
+\bibitem[Nair \& Hinton(2010)Nair and Hinton]{relu}
+Nair, Vinod and Hinton, Geoffrey~E.
+\newblock Rectified linear units improve restricted boltzmann machines.
+\newblock In \emph{ICML}, pp.\  807--814. Omnipress, 2010.
+
+\bibitem[Pascanu et~al.(2013)Pascanu, Mikolov, and Bengio]{pascanu-rnn}
+Pascanu, Razvan, Mikolov, Tomas, and Bengio, Yoshua.
+\newblock On the difficulty of training recurrent neural networks.
+\newblock In \emph{Proceedings of the 30th International Conference on Machine
+  Learning, {ICML} 2013, Atlanta, GA, USA, 16-21 June 2013}, pp.\  1310--1318,
+  2013.
+
+\bibitem[Povey et~al.(2014)Povey, Zhang, and Khudanpur]{povey}
+Povey, Daniel, Zhang, Xiaohui, and Khudanpur, Sanjeev.
+\newblock Parallel training of deep neural networks with natural gradient and
+  parameter averaging.
+\newblock \emph{CoRR}, abs/1410.7455, 2014.
+
+\bibitem[Raiko et~al.(2012)Raiko, Valpola, and LeCun]{raiko}
+Raiko, Tapani, Valpola, Harri, and LeCun, Yann.
+\newblock Deep learning made easier by linear transformations in perceptrons.
+\newblock In \emph{International Conference on Artificial Intelligence and
+  Statistics ({AISTATS})}, pp.\  924--932, 2012.
+
+\bibitem[Russakovsky et~al.(2014)Russakovsky, Deng, Su, Krause, Satheesh, Ma,
+  Huang, Karpathy, Khosla, Bernstein, Berg, and Fei-Fei]{imagenet}
+Russakovsky, Olga, Deng, Jia, Su, Hao, Krause, Jonathan, Satheesh, Sanjeev, Ma,
+  Sean, Huang, Zhiheng, Karpathy, Andrej, Khosla, Aditya, Bernstein, Michael,
+  Berg, Alexander~C., and Fei-Fei, Li.
+\newblock {ImageNet Large Scale Visual Recognition Challenge}, 2014.
+
+\bibitem[Saxe et~al.(2013)Saxe, McClelland, and Ganguli]{iclr-dynamics}
+Saxe, Andrew~M., McClelland, James~L., and Ganguli, Surya.
+\newblock Exact solutions to the nonlinear dynamics of learning in deep linear
+  neural networks.
+\newblock \emph{CoRR}, abs/1312.6120, 2013.
+
+\bibitem[Shimodaira(2000)]{covariate-shift}
+Shimodaira, Hidetoshi.
+\newblock Improving predictive inference under covariate shift by weighting the
+  log-likelihood function.
+\newblock \emph{Journal of Statistical Planning and Inference}, 90\penalty0
+  (2):\penalty0 227--244, October 2000.
+
+\bibitem[Srivastava et~al.(2014)Srivastava, Hinton, Krizhevsky, Sutskever, and
+  Salakhutdinov]{dropout}
+Srivastava, Nitish, Hinton, Geoffrey, Krizhevsky, Alex, Sutskever, Ilya, and
+  Salakhutdinov, Ruslan.
+\newblock Dropout: A simple way to prevent neural networks from overfitting.
+\newblock \emph{J. Mach. Learn. Res.}, 15\penalty0 (1):\penalty0 1929--1958,
+  January 2014.
+
+\bibitem[Sutskever et~al.(2013)Sutskever, Martens, Dahl, and Hinton]{momentum}
+Sutskever, Ilya, Martens, James, Dahl, George~E., and Hinton, Geoffrey~E.
+\newblock On the importance of initialization and momentum in deep learning.
+\newblock In \emph{ICML (3)}, volume~28 of \emph{JMLR Proceedings}, pp.\
+  1139--1147. JMLR.org, 2013.
+
+\bibitem[Szegedy et~al.(2014)Szegedy, Liu, Jia, Sermanet, Reed, Anguelov,
+  Erhan, Vanhoucke, and Rabinovich]{inception}
+Szegedy, Christian, Liu, Wei, Jia, Yangqing, Sermanet, Pierre, Reed, Scott,
+  Anguelov, Dragomir, Erhan, Dumitru, Vanhoucke, Vincent, and Rabinovich,
+  Andrew.
+\newblock Going deeper with convolutions.
+\newblock \emph{CoRR}, abs/1409.4842, 2014.
+
+\bibitem[Wiesler \& Ney(2011)Wiesler and Ney]{loglinear-training}
+Wiesler, Simon and Ney, Hermann.
+\newblock A convergence analysis of log-linear training.
+\newblock In Shawe-Taylor, J., Zemel, R.S., Bartlett, P., Pereira, F.C.N., and
+  Weinberger, K.Q. (eds.), \emph{Advances in Neural Information Processing
+  Systems 24}, pp.\  657--665, Granada, Spain, December 2011.
+
+\bibitem[Wiesler et~al.(2014)Wiesler, Richard, Schl{\"u}ter, and
+  Ney]{mean-normalized-sgd}
+Wiesler, Simon, Richard, Alexander, Schl{\"u}ter, Ralf, and Ney, Hermann.
+\newblock Mean-normalized stochastic gradient for large-scale deep learning.
+\newblock In \emph{IEEE International Conference on Acoustics, Speech, and
+  Signal Processing}, pp.\  180--184, Florence, Italy, May 2014.
+
+\bibitem[Wu et~al.(2015)Wu, Yan, Shan, Dang, and Sun]{deepimage}
+Wu, Ren, Yan, Shengen, Shan, Yi, Dang, Qingqing, and Sun, Gang.
+\newblock Deep image: Scaling up image recognition, 2015.
+
+\end{thebibliography}
