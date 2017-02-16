@@ -1,9 +1,13 @@
-### conditional_generative_adversarial_networks ###
+# Deep Learning Papers
+* [conditional_generative_adversarial_networks](#conditional_generative_adversarial_networks)
+* [Batch_Normalization](#Batch_Normalization)
+
+### conditional_generative_adversarial_networks
 * Title:Conditional Generative Adversarial Networks
 * 翻译:张兴园 (初),路转 (复),管枫(mapleguan)(审)
 * 文章下载：conditional_generative_adversarial_networks/CGAN翻译.pdf
 
-### Batch_Normalization ###
+### Batch_Normalization
 * Title:Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift
 * 翻译：Jenny(初),管枫(复),任远航(审)
 * 文章下载:
