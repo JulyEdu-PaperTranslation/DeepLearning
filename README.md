@@ -1,6 +1,6 @@
 # Deep Learning Papers
 * [conditional_generative_adversarial_networks](#conditional_generative_adversarial_networks)
-* [Batch_Normalization](#Batch_Normalization)
+* [Batch_Normalization](#batch_normalization)
 
 ### conditional_generative_adversarial_networks
 * Title:Conditional Generative Adversarial Networks
