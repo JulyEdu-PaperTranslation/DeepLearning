@@ -4,7 +4,7 @@
 
 ### [conditional_generative_adversarial_networks](https://github.com/JulyEdu-PaperTranslation/DeepLearning/blob/master/conditional_generative_adversarial_networks/CGAN%E7%BF%BB%E8%AF%91.pdf)
 * Title:Conditional Generative Adversarial Networks
-* 翻译:张兴园 (初),路转 (复),管枫(mapleguan)(审)
+* 翻译:张兴园 (初), 路转(复), 管枫(审)
 * 绪论：[**生成式对抗网络(GAN)**](https://arxiv.org/pdf/1406.2661.pdf)是一种用来训练生成式模型的新方法。本文中，我们在GAN的基础之上引入条件生成式对抗网络，它的构建并不复杂，只需要在生成模型与判别模型的构建中分别输入条件数据y。实验结果显示此模型能够在类别标签条件下生成MNIST手写体数字。对于多模态模型的训练，本文也给出了一个生成图像标记的初步示例，我们在这个示例中展示如何生成训练标签之外的描述性标签。
 * 翻译全文下载:[pdf](https://github.com/JulyEdu-PaperTranslation/DeepLearning/blob/master/conditional_generative_adversarial_networks/CGAN%E7%BF%BB%E8%AF%91.pdf)
 
