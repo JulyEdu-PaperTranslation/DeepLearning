@@ -1,6 +1,6 @@
 # Deep Learning Papers
 * [conditional-generative-adversarial-networks](#conditional-generative-adversarial-networks)
-* [Batch_Normalization](#batch-normalization)
+* [Batch_Normalization](#batch-normalization-accelerating-deep-network-training-by-reducing-internal-covariate-shift)
 
 ### [conditional generative adversarial networks](https://github.com/JulyEdu-PaperTranslation/DeepLearning/blob/master/conditional_generative_adversarial_networks/CGAN%E7%BF%BB%E8%AF%91.pdf)
 * **题目**: 条件生成对抗网络
