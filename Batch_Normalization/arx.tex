@@ -57,7 +57,7 @@
 \renewcommand{\cite}[1]{\citep{#1}}
 
 
-\title{Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift}
+\title{批量归一化：通过减少内部协变量转移加速深度网络训练}
 
 \author{Sergey Ioffe \\Google Inc., {\sl sioffe@google.com} \and
 Christian Szegedy \\Google Inc., {\sl szegedy@google.com} \and 翻译:Kenny(初),管枫(复),任远航(审)
@@ -69,174 +69,72 @@ Christian Szegedy \\Google Inc., {\sl szegedy@google.com} \and 翻译:Kenny(初)
 
 \begin{abstract}
 
-Training Deep Neural Networks is complicated by the fact that the
-distribution of each layer's inputs changes during training, as the
-parameters of the previous layers change.  This slows down the
-training by requiring lower learning rates and careful parameter
-initialization, and makes it notoriously hard to train models with
-saturating nonlinearities.  We refer to this phenomenon as {\em
-  internal covariate shift}, and address the problem by normalizing
-layer inputs.  Our method draws its strength from making normalization
-a part of the model architecture and performing the normalization {\em
-  for each training mini-batch}.  Batch Normalization allows us to use
-much higher learning rates and be less careful about
-initialization. It also acts as a regularizer, in some cases
-eliminating the need for Dropout.  Applied to a state-of-the-art image
-classification model, Batch Normalization achieves the same accuracy
-with 14 times fewer training steps, and beats the original model by a
-significant margin. 
-Using an ensemble of batch-normalized networks, we
-improve upon the best published result on ImageNet classification:
-reaching 4.9\% top-5 validation error (and 4.8\% test error), exceeding the accuracy
-of human raters.
-
+在深度神经网络的训练过程中,先前层参数的调整会导致之后每一层输入值的分布发生变化,这种现象使模型的训练变得很复杂.所以在深度神经网络模型的训练中,通常需要仔细选取初始参数并采取较小的学习率,这不但导致模型训练的效率低下,而且使得饱和非线性模型的训练极为困难. 我们把这种现象称为内部协变量转移({\em
+  internal covariate shift}),并通过归一化(normalizing)每层的输入来解决这个问题.  
+我们方法的强大之处在于把归一化的步骤作为模型训练架构的一部分来实现, 并且对每个{\em 训练小批量}都执行归一化操作.
+批量归一化允许我们使用很高的学习率并且对初始化不太在意.它在一定情况下也可以起到正则化的作用,并减轻了对Dropout的需求.我们在最先进的图像分类模型中使用批量归一化法,在减少了14倍训练步骤的情况下实现了与原模型相同的精度,并以显著增量击败了原始模型.我们使用批量归一化的网络模型,增强了在ImageNet分类上发布的最佳结果:获得了4.9\%前5验证误差（和4.8\%测试误差）,这超出了人类评估者的准确率
 \end{abstract}
 
 \section{Introduction}
 
+深度学习极大地提升了视觉，语言和许多其他领域。随机梯度下降（SGD）已经被证明是训练神经网络的一个有效的方法，并且随机梯度下降变种方法如动量\cite{momentum}和Adagrad\cite{momentum}已经被用来获得最先进的性能。随机梯度下降优化网络的参数$\Theta$，以便最小化损失
+$$\Theta = \arg \min_\Theta
+\frac{1}{N}\sum_{i=1}^N \ell(\vx_i, \Theta)$$
+其中$\vx_{1\ldots N}$是训练集。在训练的每一步中我们考虑一个大小为$m$的小批量。这个小批量被用来近似相关联参数的损失函数的梯度，通过计算
+$$\frac{1}{m} \jac{ \ell(\vx_i, \Theta)}{ \Theta}.$$
+使用小批量的样本，而不是一次一个样本，有几点好处。首先，小批量上的损失梯度是训练集上梯度的一个估计，其质量随着批量大小的增加而提高。第二，由于现代计算平台提供的并行性，对一个批量$m$的计算比每个样本的$m$次计算更有效
 
-Deep learning has dramatically advanced the state of the art in vision, speech,
-and many other areas. Stochastic gradient descent (SGD) has proved to be an effective way of training
-deep networks, and SGD variants such as momentum \cite{momentum} and Adagrad \cite{adagrad} have been used to
-achieve state of the art performance. SGD optimizes the parameters $\Theta$ of
-the network, so as to minimize the loss $$\Theta = \arg \min_\Theta
-\frac{1}{N}\sum_{i=1}^N \ell(\vx_i, \Theta)$$ where
-$\vx_{1\ldots N}$ is the training data set.  With SGD, the training
-proceeds in steps, and at each step we consider a {\em mini-batch}
-$\vx_{1\ldots m}$ of size $m$. The mini-batch is used
-to approximate the gradient of the loss function with respect to the parameters,
-by computing $$\frac{1}{m} \jac{ \ell(\vx_i, \Theta)}{ \Theta}.$$ Using
-mini-batches of examples, as opposed to one example at a time, is helpful in
-several ways. First, the gradient of the loss over a mini-batch is an estimate
-of the gradient over the training set, whose quality  improves
-as the batch size increases. Second, computation over a batch can be much more
-efficient than $m$ computations for individual examples, due to the parallelism
-afforded by the modern computing platforms.
+虽然随机梯度是简单有效的，但是它需要仔细调整模型超参数，特别是使用在优化中的学习率以及模型参数的初始值。由于每层的输入受所有先前层的参数影响的事实，使训练复杂化，以致于网络参数的小变化随着网络变得更深而放大。
 
-
-While stochastic gradient is simple and effective, it requires careful tuning of
-the model hyper-parameters, specifically the learning rate used in optimization,
-as well as the initial values for the model parameters. The training is
-complicated by the fact that the inputs to each layer are affected by the
-parameters of all preceding layers -- so that
-small changes to the network parameters amplify as the network becomes
-deeper.
-
-The change in the distributions of layers' inputs presents a problem
-because the layers need to continuously adapt to the new
-distribution. When the input distribution to a learning system
-changes, it is said to experience {\em covariate shift}
-\cite{covariate-shift}. This is typically handled via domain
-adaptation \cite{domain-adaptation-survey}. However, the notion of
-covariate shift can be extended beyond the learning system as a whole,
-to apply to its parts, such as a sub-network or a layer. Consider a
-network computing $$\ell = F_2(F_1(\vu, \Theta_1), \Theta_2)$$ where
-$F_1$ and $F_2$ are arbitrary transformations, and the parameters
-$\Theta_1, \Theta_2$ are to be learned so as to minimize the loss
-$\ell$.  Learning $\Theta_2$ can be viewed as if the inputs
-$\vx=F_1(\vu,\Theta_1)$ are fed into the sub-network
-$$\ell = F_2(\vx, \Theta_2).$$ For example, a gradient descent step
+由于层需要不断地适应新的分布，层输入的分布的变化提出了一个问题。当一个学习系统的输入分布改变时，也就认为经历了{\em 协变量移位}\cite{covariate-shift}，这个通常通过域适应（domainadaptation）\cite{domain-adaptation-survey}来处理。
+但是，协变量移位的概念可以作为一个整体延伸超出学习系统，适用于他自身的部分，比如子网络或者一个层。
+考虑一个计算如下损失函数的网络:$$\ell = F_2(F_1(\vu, \Theta_1), \Theta_2)$$ 其中
+$F_1$ 和 $F_2$ 可以是任意变换, 网络通过训练参数
+$\Theta_1, \Theta_2$ 来最小化损失函数 $\ell$.
+对 $\Theta_2$ 的学习可以被看做以
+$\vx=F_1(\vu,\Theta_1)$ 为输入，以
+$$\ell = F_2(\vx, \Theta_2).$$ 为损失函数的独立网络。比如，梯度下降步骤
 $$\Theta_2\leftarrow \Theta_2 - \frac{\alpha}{m}\sum_{i=1}^m
-\jac{F_2(\vx_i,\Theta_2)}{\Theta_2}$$ (for batch size $m$ and learning
-rate $\alpha$) is exactly equivalent to that for a stand-alone network
-$F_2$ with input $\vx$.  Therefore, the input distribution properties
-that make training more efficient -- such as having the same
-distribution between the training and test data -- apply to training
-the sub-network as well.  As such it is advantageous for the
-distribution of $\vx$ to remain fixed over time. Then, $\Theta_2$ does
-not have to readjust to compensate for the change in the distribution
-of $\vx$.
+\jac{F_2(\vx_i,\Theta_2)}{\Theta_2}$$ (批量大小为 $m$ 学习率
+为 $\alpha$) 完全等同于一个输入为$F_2$的独立网络$\vx$.  
+因此，输入分布的属性使得训练更有效 -- 比如在训练和测试数据之间有相同的分布 -- 也适用于子网络的训练。
+因此有利于$\vx$的分布随时间保持不变,同时$\Theta_2$不必不断调整来适应$\vx$分布的变化.
 
-Fixed distribution of inputs to a sub-network would have positive
-consequences for the layers {\em outside} the sub-network, as
-well. Consider a layer with a sigmoid activation function $\vz =
-g(W\vu+\vb)$ where $\vu$ is the layer input, the weight matrix $W$ and
-bias vector $\vb$ are the layer parameters to be learned, and $g(x) =
-\frac{1}{1+\exp(-x)}$. As $|x|$ increases, $g'(x)$ tends to zero. This
-means that for all dimensions of $\vx=W\vu+\vb$ except those with
-small absolute values, the gradient flowing down to $\vu$ will vanish
-and the model will train slowly. However, since $\vx$ is affected by
-$W, \vb$ and the parameters of all the layers below, changes to those
-parameters during training will likely move many dimensions of $\vx$
-into the saturated regime of the nonlinearity and slow down the
-convergence. This effect is amplified as the network depth
-increases. In practice, the saturation problem and the resulting
-vanishing gradients are usually addressed by using Rectified Linear
-Units \cite{relu} $ReLU(x)=\max(x,0)$, careful initialization
-\cite{glorot-difficulty,iclr-dynamics}, and small learning rates.  If,
-however, we could ensure that the distribution of nonlinearity inputs
-remains more stable as the network trains, then the optimizer would be
-less likely to get stuck in the saturated regime, and the training
-would accelerate.
+固定一个子网络输入的分布将对子网络外的层产生积极的影响。
+用一个sigmoid激活函数$\vz = g(W\vu+\vb)$考虑一个层，其中$\vu$是层输入，权重矩阵$W$和阈值向量$\vb$是学习的层参数，$g(x) = \frac{1}{1+\exp(-x)}$。
+随着$|x|$ 增加，$g'(x)$ 趋向于0.这意味着对于$\vx=W\vu+\vb$的所有维度，除了那些具有小的绝对值的，梯度流向下到$\vu$会消失并且模型训练会变慢。
+但是因为$\vx$是受$W, \vb$和下面所有层参数的影响，在训练期间对这些参数的改变将可能将$\vx$的许多维度移动到非线性的饱和状态并且收敛减慢。
+这种效果是随着网络的深度的增加而放大的。
+在实际应用中，饱和问题（saturationproblem）和导致的消失梯度通常通过使用Rectified Linear Units（ReLU）\cite{relu} $ReLU(x)=\max(x,0)$,细致的初始化\cite{glorot-difficulty,iclr-dynamics}和小的学习率来解决。
+然而，如果我们可以确保非线性输入的分布在网络训练时保持更加稳定，那么优化将不太可能在饱和状态中停滞，并且训练将加速。
 
-We refer to the change in the distributions of internal nodes of a
-deep network, in the course of training, as {\em Internal Covariate Shift}. Eliminating it offers
-a promise of faster training.  We propose a new mechanism, which we
-call {\em Batch Normalization}, that takes a step towards reducing
-internal covariate shift, and in doing so dramatically accelerates the
-training of deep neural nets. It accomplishes this via a normalization
-step that fixes the means and variances of layer inputs. Batch
-Normalization also has a beneficial effect on the gradient flow
-through the network, by reducing the dependence of gradients on the
-scale of the parameters or of their initial values. This allows us to
-use much higher learning rates without the risk of
-divergence. Furthermore, batch normalization regularizes the model and
-reduces the need for Dropout \cite{dropout}.  Finally, Batch
-Normalization makes it possible to use saturating nonlinearities by
-preventing the network from getting stuck in the saturated modes.
+我们将训练过程中深度网络内部节点分布的变化作为{\em 内部协变量转移}，消除它可以提供一个更快的训练，对此我们提出了一个新的机制 -- {\em 批量归一化}，它将减少内部协变量转移，这样做可以大大地加快深度神经网络的训练。
+它通过一个归一化步骤—固定层输入的平均值和方差不变来实现。
+通过减少梯度对参数规模或其初始值的依赖性，批量归一化还对网络的梯度流动具有有效的效果，这就允许我们在没有发散的风险下使用更高的学习率。
+此外，批量归一化正则化模型可以减少对Dropout \cite{dropout}的需求。
+最后，通过防止网络陷入饱和模式使得批量归一化可以使用饱和非线性。
 
-In Sec.~\ref{sec-results}, we apply Batch Normalization to the
-best-performing ImageNet classification network, and show that we can
-match its performance using only 7\% of the training steps, and can
-further exceed its accuracy by a substantial margin.  Using an
-ensemble of such networks trained with Batch Normalization, we achieve
-the top-5 error rate that improves upon the best known results on
-ImageNet classification.
+在~\ref{sec-results}节，我们将批量归一化运用到性能最佳的ImageNet分类网络，结果表明我们可以只使用7\%的训练步骤去匹配其性能，并且可以进一步大幅度的超过其精确度。
+使用用批量归一化训练的这种网络集合，我们可以获得前5的误差率，它增强了在ImageNet上已知的最佳结果。
 
+\section{减少内部\mbox{协变量}转移}
 
-\section{Towards Reducing Internal \mbox{Covariate} Shift}
+我们把在训练期间由于网络参数的变化而造成的网络激活函数输出值分布的变化称为定义{\em 内部协变量转移}。
+为了增强训练，我们要寻求减少内部协变量转移。
+我们期待通过在训练过程中保持层输入$\vx$的分布来提高训练速度。
+众所周知\cite{lecun-backprop,  loglinear-training}如果层输入被白化(whitened)，也就是说把层输入线性变换为零均值和单位方差并且去相关，则网络训练就会收敛得更快。
+由于每层的输入是由下面层产生的输出，因此对每层输入进行相同程度的白化将是有利的。
+通过白化每层输入，我们就可以向实现输入的固定分布，并消除内部协变量转移的不良影响的目标前进一步。
 
-We define {\em Internal Covariate Shift} as
-the change in the
-distribution of network activations due to the change in network parameters during training.  To improve the
-training, we seek to reduce the internal covariate shift.  By fixing
-the distribution of the layer inputs $\vx$ as the training progresses,
-we expect to improve the training speed.
-%
-It has been long known \cite{lecun-backprop,
-  loglinear-training}
-that the network training converges faster if its inputs are whitened -- i.e.,
-linearly transformed to have zero means and unit variances, and  decorrelated. As each layer
-observes the inputs produced by the layers below, it would be advantageous to
-achieve the same whitening of the inputs of each layer.  By whitening the
-inputs to each layer, we would take a step towards achieving the fixed
-distributions of inputs that would remove the ill effects of the internal covariate shift.
-
-
-We could consider whitening activations at every training step or at
-some interval, either by modifying the network directly or by changing
-the parameters of the optimization algorithm to depend on the network
-activation values \cite{mean-normalized-sgd, raiko, povey,
-  desjardins}.  However, if these modifications are interspersed with
-the optimization steps, then the gradient descent step may attempt to
-update the parameters in a way that requires the normalization to be
-updated, which reduces the effect of the gradient step. For example,
-consider a layer with the input $u$ that adds the learned bias $b$,
-and normalizes the result by subtracting the mean of the activation
-computed over the training data: $\xhat=x - E[x]$ where $x = u+b$,
-\,$\setX=\{x_{1\ldots N}\}$ is the set of values of $x$ over the
- training set, and $ \E[x] = \frac{1}{N}\sum_{i=1}^N
-x_i$. If  a gradient descent step ignores the dependence of $\E[x]$  on $b$, then it  will
-update $b\leftarrow b+\Delta b$, where $\Delta b\propto -\partial{\ell}/\partial{\xhat}$. Then  $u+(b+\Delta b) -
-\E[u+(b+\Delta b)] =
-u+b-\E[u+b]$. Thus, the combination of the update to $b$ and subsequent change in
-normalization led to no change in the output of the layer nor,
-consequently, the loss. As the training continues, $b$ will grow
-indefinitely while the loss remains fixed. This problem can get worse
-if the normalization not only centers but also scales the activations.
-We have observed this empirically in initial experiments, where the
-model blows up when the normalization parameters are computed outside
-the gradient descent step.
+我们可以考虑对每个训练步骤或者以一定间隔的激活函数进行白化，也可以通过直接修改网络或者根据网络激活值改变优化算法的参数\cite{mean-normalized-sgd, raiko, povey,  desjardins}。
+但是，如果仅仅将这些修改与优化步骤直接穿插摆放，则梯度下降的步骤对参数的调整可能会改变激活输出的分布并导致重新归一化，而这有可能会使得梯度下降的效果减弱。
+比如，考虑一个层，输入是$u$加上学习偏置$b$，并且通过减去在训练数据上计算的激活的平均值来对结果进行归一化：$\xhat=x - E[x]$其中$x = u+b$，$\setX=\{x_{1\ldots N}\}$是训练集上值的集合，$ \E[x] = \frac{1}{N}\sum_{i=1}^Nx_i$。
+如果一个梯度下降步骤忽略了$\E[x]$对 $b$的依赖性，则它更新的值就是$b\leftarrow b+\Delta b$，其中$\Delta b\propto -\partial{\ell}/\partial{\xhat}$。
+然后$u+(b+\Delta b) - \E[u+(b+\Delta b)] = u+b-\E[u+b]$。
+因此，对$b$的更新和随后的归一化中的变化这两者的组合导致层的输出没有改变，所以也不会改变损失函数。
+随着训练继续，$b$ 将无限增长，而损失函数则保持固定不变。
+如果归一化不仅中心而且缩放激活，这个问题可能变得更糟。
+我们在初始试验中观察到，当归一化参数在梯度下降步骤外计算时模型就会因为参数发散而不收敛。
 
 The issue with the above approach is that the gradient descent
 optimization does not take into account the fact that the
