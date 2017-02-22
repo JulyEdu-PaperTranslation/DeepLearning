@@ -1,0 +1,241 @@
+
+\newcommand{\jac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\xhat}{\widehat{x}}
+\newcommand{\yhat}{\widehat{y}}
+\newcommand{\zhat}{\widehat{z}}
+\newcommand{\vxhat}{\widehat\mathrm{x}}
+\newcommand{\vzhat}{\widehat\mathrm{z}}
+\newcommand{\setX}{\mathcal{X}}
+\newcommand{\setB}{\mathcal{B}}
+\newcommand{\E}{\text{E}}
+\newcommand{\Var}{\text{Var}}
+\newcommand{\Cov}{\text{Cov}}
+\newcommand{\Fhat}{\widehat{F}}
+\newcommand{\Thetahat}{\widehat{\Theta}}
+\newcommand{\Norm}{\text{Norm}}
+\newcommand{\BatchNorm}{\text{BN}}
+\newcommand{\kk}{{(k)}}
+\newcommand{\vx}{\mathrm{x}}
+\newcommand{\vy}{\mathrm{y}}
+\newcommand{\vp}{\mathrm{p}}
+\newcommand{\vg}{\mathrm{g}}
+\newcommand{\e}{\mathrm{E}}
+\newcommand{\vu}{\mathrm{u}}
+\newcommand{\mils}{\cdot 10^6}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\newcommand{\rmax}{r_{\text{max}}}
+\newcommand{\dmax}{d_{\text{max}}}
+
+
+\begin{abstract}
+
+Batch Normalization is quite effective at accelerating and improving the training of deep models. However, its effectiveness diminishes when the training minibatches are small, or do not consist of independent samples. We hypothesize that this is due to the dependence of model layer inputs on all the examples in the minibatch, and different activations being produced between training and inference. We propose Batch Renormalization, a simple and effective extension to ensure that the training and inference models generate the same outputs that depend on individual examples rather than the entire minibatch. Models trained with Batch Renormalization perform substantially better than batchnorm when training with small  or non-i.i.d. minibatches. At the same time, Batch Renormalization retains the benefits of batchnorm such as insensitivity to initialization and training efficiency.
+
+\end{abstract}
+
+\section{Introduction}
+
+Batch Normalization (``batchnorm" \cite{batchnorm}) has recently become a part of the standard toolkit for training deep networks. By normalizing activations, batch normalization helps stabilize the distributions of internal activations as the model trains. Batch normalization also makes it possible to use significantly higher learning rates, and reduces the sensitivity to initialization. These effects help accelerate the training, sometimes dramatically so. Batchnorm has been successfully used to enable  state-of-the-art architectures such as residual networks \cite{resnet}.
+
+Batchnorm works on minibatches in stochastic gradient training, and uses the mean and variance of the minibatch  to normalize the activations. Specifically, consider a particular node in the deep network, producing a scalar value for each input example. Given a minibatch $\setB$ of $m$ examples, consider the values of this node, $x_1\ldots x_m$. Then batchnorm takes the form:
+$$
+\xhat_i \leftarrow \frac{x_i-\mu_\setB}{\sigma_\setB}
+$$
+where $\mu_\setB$ is the sample mean of $x_1\ldots x_m$, and $\sigma_\setB^2$ is the sample variance (in practice, a small $\epsilon$ is added to it for numerical stability). It is clear that the normalized activations corresponding to an input example will depend on the other examples in the  minibatch. This is undesirable during inference, and therefore the mean and variance computed over all training data can be used instead. In practice, the model usually maintains moving averages of minibatch means and variances, and during inference uses those in place of the minibatch statistics. 
+
+While it appears to make sense to replace the minibatch statistics with whole-data ones during inference, this changes the activations in the network. In particular, this means that the upper layers (whose inputs are normalized using the minibatch) are trained on representations different from those computed in inference (when the inputs are normalized using the population statistics). When the minibatch size is large and its elements are i.i.d. samples from the training distribution, this difference is small, and can in fact aid generalization. However,  minibatch-wise normalization may have significant drawbacks:
+
+For {\em small minibatches}, the estimates of the mean and variance become less accurate. These inaccuracies are compounded with depth, and reduce the quality of resulting models. Moreover, as each example is used to compute the variance used in its own normalization, the normalization operation is less well approximated by an affine transform, which is what is used in inference.
+
+{\em Non-i.i.d. minibatches} can have a detrimental effect on models with batchnorm. For example, in a metric learning scenario (e.g. \cite{nca}), it is common to bias the minibatch sampling to include sets of examples that are known to be related. For instance, for a minibatch of size 32, we may randomly select 16 labels, then choose 2 examples for each of those labels. Without batchnorm, the loss computed for the minibatch decouples over the examples, and the intra-batch dependence introduced by our sampling mechanism may, at worst, increase the variance of the minibatch gradient. With batchnorm, however, the examples interact at every layer, which may cause the model to overfit to the specific distribution of minibatches and suffer when used on individual examples.
+
+The dependence of the batch-normalized activations on the entire minibatch makes batchnorm powerful, but it is also the source of its drawbacks. Several approaches \cite{weightnorm,layernorm,normprop} have been proposed to alleviate this. However, unlike batchnorm which can be easily applied to a network, these methods may require careful analysis of nonlinearities, may need to be combined with  minibatch centering, and may change the class of functions representable by the model. Another alternative \cite{gan} is to use a separate and fixed minibatch to compute the normalization parameters, but this makes the training more expensive.
+
+In this paper we propose {\em Batch Renormalization}, a new extension to batchnorm. Our method ensures that the activations computed in the forward pass of the training step depend only on a single example and are identical to the activations computed in inference. This significantly improves the training on non-i.i.d. or small minibatches, compared to batchnorm, without incurring extra cost.
+
+\section{Prior Work: Batch Normalization}
+
+We are interested in stochastic gradient optimization of deep networks. The task is to minimize the loss, which decomposes over training examples:
+$$\Theta = \arg \min_\Theta
+\frac{1}{N}\sum_{i=1}^N \ell_i(\Theta)$$
+where $\ell_i$ is the loss incurred on the $i$th training example, and $\Theta$ is the vector of model weights. At each training step, a minibatch of $m$ examples is used to compute the  gradient
+$$\frac{1}{m} \jac{ \ell_i(\Theta)}{ \Theta}$$
+which the optimizer uses to adjust $\Theta$.
+
+Consider a particular node $x$ in a deep network. We observe that $x$ depends on all the model parameters that are used for its computation, and when those change, the distribution of $x$ also changes. Since $x$ itself affects the loss through all the layers above it, this change in distribution complicates the training of the layers above. This has been referred to as internal covariate shift. 
+Batch Normalization \cite{batchnorm} addresses it by considering the values of $x$ in a minibatch $\setB=\{x_{1\ldots m}\}$. It then normalizes them as follows:
+\begin{align*}
+    \mu_\setB &\leftarrow \frac{1}{m}\sum_{i=1}^m x_i\\
+  \sigma_\setB &\leftarrow  \sqrt{\frac{1}{m}\sum_{i=1}^m (x_i-\mu_\setB)^2+\epsilon}\\
+\xhat_i &\leftarrow \frac{x_i-\mu_\setB}{\sigma_\setB}   
+\\
+  y_i &\leftarrow \gamma\xhat_i + \beta  \equiv \BatchNorm(x_i)
+\end{align*}
+Here $\gamma$ and $\beta$ are trainable parameters (learned using the same procedure, such as stochastic gradient descent, as all the other model weights), and $\epsilon$ is a small constant. Crucially, the computation of the sample mean $\mu_\setB$ and sample standard deviation $\sigma_\setB$ are part of the model architecture, are themselves functions of the model parameters, and as such participate in backpropagation. The backpropagation formulas for batchnorm are easy to derive by chain rule and are given in \cite{batchnorm}. 
+
+When applying batchnorm to a layer of activations $\vx$, the normalization takes place independently for each dimension (or, in the convolutional case, for each channel or feature map). 
+When $\vx$ is itself a result of applying a linear transform $W$ to the previous layer, batchnorm makes the model invariant to the scale of $W$ (ignoring the small $\epsilon$). This invariance makes it possible to not be picky about weight initialization, and to use larger learning rates. 
+
+Besides the reduction of internal covariate shift, an intuition for another effect of batchnorm can be obtained by looking at the gradients computed by backpropagation for different layers. Consider the normalized layer $\vxhat$, whose elements all have zero mean and unit variance. For a thought experiment, let us assume that the dimensions of $\vxhat$ are  Gaussian and independent. Further, let us approximate the loss $\ell$ as a linear function of $\vxhat$: $\ell = \vg^T \vxhat$, where $\vg = \jac{\ell}{\vxhat}$. It then follows that  $\|\vg\|^2 = \Var[\ell]$ which only depends on the model loss and not the layer we picked. This means that the norm of the gradient w.r.t. a normalized layer $\|\jac{\ell}{\vxhat}\|$ is the same for different normalized layers. Therefore the gradients, as they flow through the network, do not explode nor vanish, thus facilitating the training. While the assumptions of independence, Gaussianity and linearity do not hold in practice, the gradient flow is in fact significantly improved in batch-normalized models.
+
+During inference, the standard practice is to normalize the activations using the moving averages $\mu$, $\sigma^2$ instead of minibatch mean $\mu_\setB$ and variance $\sigma_\setB^2$:
+$$
+y_\text{inference} = \frac{x-\mu}{\sigma}\cdot \gamma + \beta
+$$
+which depends only on a single input example rather than requiring a whole minibatch. 
+
+It is natural to ask whether we could simply use the moving averages $\mu$, $\sigma$ to perform the normalization during training, since this would remove the dependence of the normalized activations on the other example in the minibatch. This, however, has been observed to lead to the model blowing up. As argued in \cite{batchnorm}, such use of moving averages would cause the gradient optimization and the normalization to counteract each other. For example, the gradient step may increase a bias or scale the convolutional weights, in spite of the fact that the normalization would cancel the effect of these changes on the loss. This would result in unbounded growth of model parameters without actually improving the loss. It is thus crucial to use the minibatch moments, and to backpropagate through them.
+
+\section{Batch Renormalization}
+
+With batchnorm, the activities in the network differ between training and inference, since the normalization is done differently between the two models. Here, we aim to rectify this, while retaining  the benefits of batchnorm.
+
+Let us observe that if we have a minibatch and normalize a particular node  $x$ using either the minibatch statistics or their moving averages, then the results of these two normalizations are related by an affine transform. 
+Specifically, let $\mu$ be an estimate of the mean of $x$, and $\sigma$ be an estimate of its standard deviation, computed perhaps as a moving average over the last several minibatches. Then, we have:
+$$
+\frac{x_i-\mu}{\sigma} = \frac{x_i-\mu_\setB}{\sigma_\setB} \cdot r + d,\ \ \ \ \text{where $ r = \frac{\sigma_\setB}{\sigma}, \ \  d = \frac{\mu_\setB-\mu}{\sigma}$}
+$$
+If  $\sigma = \e[\sigma_\setB]$ and $\mu=\e[\mu_\setB]$, then $\e[r] = 1$ and $\e[d] = 0$  (the expectations are w.r.t. a minibatch $\setB$). Batch Normalization, in fact, simply sets $r=1$, $d=0$. 
+
+We propose to retain $r$ and $d$, but treat them as constants for the purposes of gradient computation. In other words, we augment a  network, which contains batch normalization layers, with a per-dimension affine transformation applied to the normalized activations. We treat the parameters $r$ and $d$ of this affine transform as fixed, even though they were computed from the minibatch itself. It is important to note that this transform  is identity in expectation, as long as  $\sigma = \e[\sigma_\setB]$ and $\mu=\e[\mu_\setB]$. We refer to batch normalization augmented with this affine transform as {\em Batch Renormalization}: the fixed (for the given minibatch) $r$ and $d$ correct for the fact that the minibatch statistics differ from the population ones. This allows the above layers to observe the ``correct"  activations -- namely, the ones that would be generated by the inference model.
+
+In practice, it is beneficial to train the model for a certain number of iterations with batchnorm alone, without the correction, then ramp up the amount of allowed correction. We do this by imposing bounds on $r$ and $d$, which initially constrain them to $1$ and $0$, respectively, and then are gradually relaxed.
+
+\begin{algorithm}[t]
+  \caption{\em Training (top) and inference (bottom) with Batch Renormalization, applied to activation $x$ over a mini-batch. During backpropagation, standard chain rule is used.
+  The values marked with \texttt{stop\_gradient} are treated as constant for a given training step, and the gradient is not propagated through them.
+  }
+\label{alg-bn}
+  \begin{algorithmic}
+  \REQUIRE 
+  Values of $x$ over a training mini-batch
+  $\setB=\{x_{1\ldots m}\}$; 
+ parameters $\gamma$,
+    $\beta$; current moving mean $\mu$ and standard deviation $\sigma$; moving average update rate $\Delta$; maximum allowed correction $\rmax$, $\dmax$.
+  \ENSURE $\{y_i =  \text{BatchRenorm}(x_i)\}$; updated $\mu$, $\sigma$.
+  \begin{flalign*}
+      \mu_\setB &\leftarrow  \frac{1}{m}\sum_{i=1}^m x_i \\
+  \sigma_\setB &\leftarrow  \sqrt{\epsilon + \frac{1}{m}\sum_{i=1}^m (x_i-\mu_\setB)^2 }
+\\
+  r &\leftarrow \mathtt{stop\_gradient}\left(\text{clip}_{[1/\rmax, \rmax]}\left( \frac{\sigma_\setB}{\sigma}\right)\right) \\
+  d &\leftarrow  \mathtt{stop\_gradient}\left(\text{clip}_{[-\dmax, \dmax]}\left(\frac{\mu_\setB-\mu}{\sigma}\right)\right)
+  \\
+\xhat_i &\leftarrow \frac{x_i-\mu_\setB}{\sigma_\setB} \cdot r + d 
+\\
+  y_i &\leftarrow \gamma\,\xhat_i + \beta   \\
+  \\
+  \mu & \mathrel{:}= \mu + \Delta (\mu_\setB - \mu) \hspace{0.2in} \text{ // Update moving averages}\\
+  \sigma &\mathrel{:}=  \sigma + \Delta (\sigma_\setB - \sigma) 
+  \end{flalign*} 
+  \hspace{-.1in}\hrulefill\hspace{.03in}\\
+  \vspace{-0.1in}
+    \hspace{-.1in}\hrulefill\hspace{.03in}\\
+  \vspace{.2in}
+  \item[\textbf{Inference:}]\ \ \ \ \ \ \  
+  $\displaystyle y\leftarrow \gamma\cdot \frac{x-\mu}{\sigma} + \beta$
+    \vspace{.1in}
+\end{algorithmic}
+\end{algorithm}
+
+Algorithm \ref{alg-bn} presents Batch Renormalization. Unlike batchnorm, where the moving averages are computed during training but used only for inference, Batch Renorm does use $\mu$ and $\sigma$ during training to perform the correction. We use a fairly high rate of update $\Delta$ for these averages, to ensure that they benefit from averaging multiple batches but do not become stale relative to the model parameters. We explicitly update the exponentially-decayed moving averages $\mu$ and $\sigma$, and optimize the rest of the model using gradient optimization, with the gradients calculated via backpropagation:
+\begin{align*}
+\jac{\ell}{\xhat_i} &= \jac{\ell}{y_i}\cdot \gamma \\ 
+\jac{\ell}{\sigma_\setB}
+&= \sum_{i=1}^m \jac{\ell}{\xhat_i}\cdot(x_i-\mu_\setB)\cdot
+\frac{-r}{\sigma_\setB^2} \\ 
+\jac{\ell}{\mu_\setB} &=
+\sum_{i=1}^m \jac{\ell}{\xhat_i}\cdot
+\frac{-r}{\sigma_\setB}\\
+   \jac{\ell}{x_i} &= \jac{\ell}{\xhat_i} \cdot
+\frac{r}{\sigma_\setB} + \jac{\ell}{\sigma_\setB}\cdot
+\frac{x_i-\mu_\setB}{m \sigma_\setB} + \jac{\ell}{\mu_\setB}\cdot \frac{1}{m}\\
+\jac{\ell}{\gamma}&= \sum_{i=1}^m \jac{\ell}{y_i} \cdot \xhat_i
+  \\ 
+  \jac{\ell}{\beta} &= \sum_{i=1}^m \jac{\ell}{y_i}
+\end{align*}
+These gradient equations reveal another interpretation of Batch Renormalization. Because the loss $\ell$ is unaffected when all $x_i$ are shifted or scaled by the same amount, 
+the functions $\ell(\{x_i+t\})$ and $\ell(\{x_i\cdot(1+t)\})$ are constant in $t$, and computing their derivatives at $t=0$ gives $\sum_{i=1}^m \jac{\ell}{x_i} = 0$ and $\sum_{i=1}^m x_i\,\jac{\ell}{x_i} = 0$. Therefore, if we consider the $m$-dimensional vector $\big\{\jac{\ell}{x_i}\big\}$ (with one element per example in the minibatch), and further consider two vectors 
+$\vp_0=(1,\ldots,1)$ and $\vp_1=(x_1,\ldots,x_m)$, then $\big\{\jac{\ell}{x_i}\big\}$ lies in the null-space of $\vp_0$ and $\vp_1$.
+In fact, it is easy to see from the Batch Renorm backprop formulas that to compute the gradient $\big\{\jac{\ell}{x_i}\big\}$ from  $\big\{\jac{\ell}{\xhat_i}\big\}$, we need to first scale the latter by $r/\sigma_\setB$, then project it onto the null-space of $\vp_0$ and $\vp_1$. For $r=\frac{\sigma_\setB}{\sigma}$, this is equivalent to the backprop for the transformation $\frac{x-\mu}{\sigma}$, but combined with the null-space projection. In other words, Batch Renormalization allows us to normalize using moving averages $\mu$, $\sigma$ in training, and makes it work using the extra projection step in backprop.
+
+Batch Renormalization shares many of the beneficial properties of batchnorm, such as insensitivity to initialization and ability to train efficiently with large learning rates. Unlike batchnorm, our method ensures that that all layers are trained on internal representations that will be actually used during inference.
+
+
+\section{Results}
+
+To evaluate Batch Renormalization, we applied it to the problem of image classification. Our baseline model is Inception v3 \cite{inception-v3}, trained on 1000 classes from ImageNet training set \cite{imagenet}, and evaluated on the ImageNet validation data. In the baseline model, batchnorm was used after convolution and before the ReLU \cite{relu}. 
+To apply Batch Renorm, we simply swapped it into the model in place of batchnorm. Both methods normalize each feature map over examples as well as over spatial locations. We fix the scale $\gamma=1$, since it could be propagated through the ReLU and absorbed into the next layer. 
+
+The training used 50 synchronized workers \cite{syncreplicas}. Each worker processed a minibatch of 32 examples per training step. The gradients computed for all 50 minibatches were aggregated and then used by the RMSProp optimizer \cite{rmsprop}. As is common practice, the inference model used exponentially-decayed moving averages of all model parameters, including the $\mu$ and $\sigma$ computed by both batchnorm and Batch Renorm.
+
+For Batch Renorm, we used $\rmax=1$, $\dmax=0$ (i.e. simply batchnorm) for the first 5000 training steps, after which these were gradually relaxed to reach $\rmax=3$ at 40k steps, and $\dmax=5$ at 25k steps. These final values resulted in clipping a small fraction of $r$s, and none of $d$s. However, at the beginning of training, when the learning rate was larger, it proved important to increase $\rmax$ slowly: otherwise, large gradients were observed to suddenly and severely increase the loss. We have found clipping to be less important for those Batch Renorm layers that are followed by another normalization layer. The intuition is that for such layers, scaling up all the corrections $r$ will leave the model output and gradients unchanged since the next normalization layer will cancel out the effects the larger correction. 
+
+All the hyperparameters other than those related to normalization were fixed between the models and across experiments.
+
+\subsection{Baseline}
+
+\begin{figure}
+    \centering
+    \begin{tabular}{@{}c@{}}
+\includegraphics[width=\columnwidth]{baseline.eps}
+\end{tabular} 
+
+    \caption{\em Validation top-1 accuracy of Inception-v3 model with batchnorm and its Batch Renorm version, trained on 50 synchronized workers, each processing minibatches of size 32. The Batch Renorm model achieves a marginally higher validation accuracy.
+    }
+    \label{fig-baseline}
+\end{figure}
+
+As a baseline, we trained the batchnorm model using the minibatch size of 32. More specifically, batchnorm was applied to each of the 50 minibatches; each example was normalized using 32 examples, but the resulting gradients were aggregated over 50 minibatches. This model achieved the top-1 validation accuracy of $78.3\%$ after 130k training steps.
+
+To verify that Batch Renorm does not diminish performance on such minibatches, we also trained the model with Batch Renorm, see Figure \ref{fig-baseline}. The test accuracy of this model closely tracked the baseline, achieving a slightly higher test accuracy ($78.5\%$) after the same number of steps.
+
+\subsection{Small minibatches}
+\begin{figure}
+    \centering
+    \begin{tabular}{@{}c@{}}
+\includegraphics[width=\columnwidth]{small.eps}
+\end{tabular} 
+    \caption{\em Validation accuracy for models trained with either batchnorm or Batch Renorm, where normalization is performed for sets of 4 examples (but with the gradients aggregated over all $50\times 32$ examples processed by the 50 workers). Batch Renorm allows the model to train faster and achieve a higher accuracy, although normalizing sets of 32 examples performs better.
+    }
+    \label{fig-small}
+\end{figure}
+
+To investigate the effectiveness of Batch Renorm when training on small minibatches, we reduced the number of examples  used for normalization to 4. Each minibatch of size 32 was thus broken into ``microbatches" each having 4 examples; each microbatch was normalized independently, but the loss for each minibatch was computed as before. In other words, the gradient was still aggregated over 1600 examples per step, but the normalization involved groups of 4 examples rather than 32 as in the baseline. Figure \ref{fig-small} shows the results.
+
+The validation accuracy of the batchnorm model is significantly lower than the baseline that normalized over minibatches of size 32, and training is slow, achieving $74.2\%$ at 210k steps. We obtain a substantial improvement much faster ($76.5\%$ at 130k steps) by replacing batchnorm with Batch Renorm, However, the resulting test accuracy is still below what we get when applying either batchnorm or Batch Renorm to size 32 minibatches. Although Batch Renorm improves the training with small minibatches, it does not eliminate the benefit of having larger ones.
+
+% We observed a further increase in validation accuracy to $76.8\%$ when the maximum correction ratio $\rmax$ is further increased for those Batch Renorm layers that are followed by another normalization layer. 
+
+
+\subsection{Non-i.i.d. minibatches}
+\begin{figure}[t]
+    \centering
+    \begin{tabular}{@{}c@{}}
+\includegraphics[width=\columnwidth]{biased.eps}
+\end{tabular} 
+    \caption{\em Validation accuracy when training on non-i.i.d. minibatches, obtained by sampling 2 images for each of 16 (out of total 1000) random labels. This distribution bias results not only in a low test accuracy, but also low accuracy on the training set, with an eventual drop. This indicates overfitting to the particular minibatch distribution, which is confirmed by the improvement when the test minibatches also contain 2 images per label, and batchnorm uses minibatch statistics $\mu_\setB$, $\sigma_\setB$ during inference. It improves further if batchnorm is applied separately to 2 halves of a training minibatch, making each of them more i.i.d. Finally, by using Batch Renorm, we are able to just train and evaluate normally, and achieve the same validation accuracy as we get for i.i.d. minibatches in Fig. \ref{fig-baseline}.
+    }
+    \label{fig-biased}
+\end{figure}
+
+When examples in a minibatch are not sampled independently, batchnorm can 
+perform rather poorly. However, sampling with dependencies  may be necessary for tasks such as for metric learning \cite{nca,facenet}. We may want to ensure that images with the same label have more similar representations than otherwise, and to learn this we require that a reasonable number of same-label image pairs can be found within the same minibatch.
+
+In this experiment (Figure \ref{fig-biased}), we selected each minibatch of size 32 by randomly sampling 16 labels (out of the total 1000) with replacement, then randomly selecting 2 images for each of those labels.
+When training with batchnorm, the test accuracy is much lower than for i.i.d. minibatches, achieving only $67\%$. Surprisingly, even the {\em training} accuracy is much lower ($72.8\%$) than the {\em test} accuracy in the i.i.d. case, and in fact exhibits a drop that is consistent with overfitting. We suspect that this is in fact what happens: the model learns to predict labels for images that come in a set, where each image has a counterpart with the same label. This does not directly translate to classifying images individually, thus producing a drop in the accuracy computed on the training data. To verify this, we also evaluated the model in the ``training mode", i.e. using minibatch statistics $\mu_\setB$, $\sigma_\setB$ instead of moving averages $\mu$, $\sigma$, where each test minibatch had size 50 and was obtained using the same procedure as the training minibatches -- 25 labels, with 2 images per label. As expected, this does much better, achieving $76.5\%$, though still below the baseline accuracy. Of course, this evaluation scenario is usually infeasible, as we want the image representation to be a deterministic function of that image alone.
+
+We can improve the accuracy for this problem by splitting each minibatch into two halves of size 16 each, so that for every pair of images belonging to the same class, one image is assigned to the first half-minibatch, and the other to the second. Each half is then more i.i.d., and this achieves a much better test accuracy ($77.4\%$ at 140k steps), but still below the baseline. This method is only applicable when the number of examples per label is small (since this determines the number of microbatches that a minibatch needs to be split into).
+
+With Batch Renorm, we simply trained the model with minibatch size of 32. The model achieved the same test accuracy ($78.5\%$ at 120k steps) as the equivalent model on i.i.d. minibatches, vs. $67\%$ obtained with batchnorm. By replacing batchnorm with Batch Renorm, we ensured that the inference model can effectively classify individual images. This has completely eliminated the effect of overfitting the model to image sets with a biased label distribution.
+
+
+\section{Conclusions}
+
+We have demonstrated that Batch Normalization, while effective, is not well suited to small or non-i.i.d. training minibatches. We hypothesized that these drawbacks are due to the fact that the activations in the model, which are in turn used by other layers as inputs, are computed differently during training than during inference. We address this with Batch Renormalization, which replaces batchnorm and ensures that the outputs computed by the model are dependent only on the individual examples and not the entire minibatch, during both training and inference.
+
+Batch Renormalization extends batchnorm with a per-dimension correction to ensure that the activations match between the training and inference networks. This correction is identity in expectation; its parameters are computed from the minibatch but are treated as constant by the optimizer. Unlike batchnorm, where the means and variances used during inference do not need to be computed until the training has completed, Batch Renormalization benefits from having these statistics directly participate in the training. Batch Renormalization is as easy to implement as batchnorm itself, runs at the same speed during both training and inference, and significantly improves training on small or non-i.i.d. minibatches. Our method does have extra hyperparameters: the update rate $\Delta$ for the moving averages, and the schedules for correction limits $\dmax$, $\rmax$. A more extensive investigation of the effect of these is a part of future work.
+
+Batch Renormalization offers a promise of improving the performance of any model that would normally use batchnorm. This includes Residual Networks \cite{resnet}. Another application is Generative Adversarial Networks \cite{gan}, where the non-determinism introduced by batchnorm has been found to be an issue, and Batch Renorm may provide a solution.
+
+Finally, Batch Renormalization may benefit applications where applying batch normalization has been difficult -- such as recurrent networks. There, batchnorm would require each timestep to be normalized independently, but Batch Renormalization may make it possible to use the same running averages to normalize all timesteps, and then update those averages using all timesteps. This remains one of the areas that warrants further exploration.

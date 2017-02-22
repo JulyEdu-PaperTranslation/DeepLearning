@@ -1,0 +1,29 @@
+\documentclass[twocolumn]{article}
+
+\input{packages}
+
+\usepackage[letterpaper, margin=1in, top=0.5in]{geometry}
+\usepackage[square,sort,comma,numbers]{natbib}
+
+\begin{document}
+
+%\setcitestyle{authoryear,round,citesep={;},aysep={,},yysep={;}}
+\renewcommand{\cite}[1]{\citep{#1}}
+
+\title{\input{title}}
+
+\author{Sergey Ioffe \\Google Inc., {\sl sioffe@google.com} }
+
+\date{}
+
+\maketitle
+
+
+\input{common}
+
+\bibliographystyle{abbrv}
+{\small
+\bibliography{bib}
+}
+
+\end{document}

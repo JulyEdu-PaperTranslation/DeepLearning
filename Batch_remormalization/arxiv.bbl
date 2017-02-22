@@ -1,0 +1,76 @@
+\begin{thebibliography}{10}
+
+\bibitem{normprop}
+D.~Arpit, Y.~Zhou, B.~U. Kota, and V.~Govindaraju.
+\newblock Normalization propagation: A parametric technique for removing
+  internal covariate shift in deep networks.
+\newblock {\em arXiv preprint arXiv:1603.01431}, 2016.
+
+\bibitem{layernorm}
+J.~L. Ba, J.~R. Kiros, and G.~E. Hinton.
+\newblock Layer normalization.
+\newblock {\em arXiv preprint arXiv:1607.06450}, 2016.
+
+\bibitem{syncreplicas}
+J.~Chen, R.~Monga, S.~Bengio, and R.~Jozefowicz.
+\newblock Revisiting distributed synchronous sgd.
+\newblock {\em arXiv preprint arXiv:1604.00981}, 2016.
+
+\bibitem{nca}
+J.~Goldberger, S.~Roweis, G.~Hinton, and R.~Salakhutdinov.
+\newblock Neighbourhood components analysis.
+\newblock In {\em Advances in Neural Information Processing Systems 17}, 2004.
+
+\bibitem{resnet}
+K.~He, X.~Zhang, S.~Ren, and J.~Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition}, pages 770--778, 2016.
+
+\bibitem{batchnorm}
+S.~Ioffe and C.~Szegedy.
+\newblock Batch normalization: Accelerating deep network training by reducing
+  internal covariate shift.
+\newblock In {\em Proceedings of the 32nd International Conference on Machine
+  Learning (ICML-15)}, pages 448--456, 2015.
+
+\bibitem{relu}
+V.~Nair and G.~E. Hinton.
+\newblock Rectified linear units improve restricted boltzmann machines.
+\newblock In {\em ICML}, pages 807--814. Omnipress, 2010.
+
+\bibitem{imagenet}
+O.~Russakovsky, J.~Deng, H.~Su, J.~Krause, S.~Satheesh, S.~Ma, Z.~Huang,
+  A.~Karpathy, A.~Khosla, M.~Bernstein, A.~C. Berg, and L.~Fei-Fei.
+\newblock {ImageNet Large Scale Visual Recognition Challenge}, 2014.
+
+\bibitem{gan}
+T.~Salimans, I.~Goodfellow, W.~Zaremba, V.~Cheung, A.~Radford, and X.~Chen.
+\newblock Improved techniques for training gans.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  2226--2234, 2016.
+
+\bibitem{weightnorm}
+T.~Salimans and D.~P. Kingma.
+\newblock Weight normalization: A simple reparameterization to accelerate
+  training of deep neural networks.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  901--901, 2016.
+
+\bibitem{facenet}
+F.~Schroff, D.~Kalenichenko, and J.~Philbin.
+\newblock Facenet: {A} unified embedding for face recognition and clustering.
+\newblock {\em CoRR}, abs/1503.03832, 2015.
+
+\bibitem{inception-v3}
+C.~Szegedy, V.~Vanhoucke, S.~Ioffe, J.~Shlens, and Z.~Wojna.
+\newblock Rethinking the inception architecture for computer vision.
+\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition}, pages 2818--2826, 2016.
+
+\bibitem{rmsprop}
+T.~Tieleman and G.~Hinton.
+\newblock Lecture 6.5 - rmsprop.
+\newblock COURSERA: Neural Networks for Machine Learning, 2012.
+
+\end{thebibliography}
