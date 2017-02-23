@@ -9,15 +9,32 @@
 \usepackage{natbib}
 \usepackage[boxed]{algorithm}
 \usepackage{algorithmic}
-\usepackage{hyperref}
+%\usepackage{hyperref}
 \usepackage{framed}
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
+\usepackage{tikz} %加水印用
+\usepackage{eso-pic}
 
 \usepackage{amsmath}
 \usepackage{array}
 \usepackage{stackengine}
 
 \usepackage[letterpaper, margin=1in, top=0.5in]{geometry}
+\usepackage[unicode]{hyperref}
+
+
+\newcommand\BackgroundPicture{%
+  \put(0,0){%
+    \parbox[b][\paperheight]{\paperwidth}{%
+      \vfill
+      \centering%
+        \begin{tikzpicture}[remember picture,overlay]
+        \node [rotate=60,scale=8,text opacity=0.15] at (current page.center)
+        { 七月在线翻译组       %\copyright XXX Powered by~\LaTeX
+        };
+        \end{tikzpicture}%
+%      \vfill
+    }}}
 
 \begin{document}
 
@@ -56,11 +73,11 @@
 \setcitestyle{authoryear,round,citesep={;},aysep={,},yysep={;}}
 \renewcommand{\cite}[1]{\citep{#1}}
 
-
 \title{批量归一化：通过减少内部协变量转移加速深度网络训练}
 
 \author{Sergey Ioffe \\Google Inc., {\sl sioffe@google.com} \and
-Christian Szegedy \\Google Inc., {\sl szegedy@google.com} \and 翻译:Kenny(初),管枫(复),任远航(审)
+Christian Szegedy \\Google Inc., {\sl szegedy@google.com} \and 翻译:Kenny(初),管枫(复),任远航(审)\\
+\href{https://github.com/JulyEdu-PaperTranslation/DeepLearning}{七月在线翻译组}
 }
 
 \date{}
@@ -74,6 +91,8 @@ Christian Szegedy \\Google Inc., {\sl szegedy@google.com} \and 翻译:Kenny(初)
 我们方法的强大之处在于把归一化的步骤作为模型训练架构的一部分来实现, 并且对每个{\em 训练小批量}都执行归一化操作.
 批量归一化允许我们使用很高的学习率并且对初始化不太在意.它在一定情况下也可以起到正则化的作用,并减轻了对Dropout的需求.我们在最先进的图像分类模型中使用批量归一化法,在减少了14倍训练步骤的情况下实现了与原模型相同的精度,并以显著增量击败了原始模型.我们使用批量归一化的网络模型,增强了在ImageNet分类上发布的最佳结果:获得了4.9\%前5验证误差（和4.8\%测试误差）,这超出了人类评估者的准确率
 \end{abstract}
+
+\AddToShipoutPicture{\BackgroundPicture}
 
 \section{Introduction}
 
