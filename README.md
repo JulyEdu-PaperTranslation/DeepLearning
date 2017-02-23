@@ -1,6 +1,7 @@
 # Deep Learning Papers
 * [conditional-generative-adversarial-networks](#conditional-generative-adversarial-networks)
 * [Batch_Normalization](#batch-normalization-accelerating-deep-network-training-by-reducing-internal-covariate-shift)
+* [Batch_renormalization](#batch-renormalization-towards-reducing-minibatch-dependence-in-batch-normalized-models)
 
 ### [conditional generative adversarial networks](https://github.com/JulyEdu-PaperTranslation/DeepLearning/blob/master/conditional_generative_adversarial_networks/CGAN%E7%BF%BB%E8%AF%91.pdf)
 * **题目**: 条件生成对抗网络
@@ -31,3 +32,6 @@
 * **翻译全文下载**:([pdf](https://github.com/JulyEdu-PaperTranslation/DeepLearning/blob/master/Batch_Normalization/arx.pdf),[word](https://github.com/JulyEdu-PaperTranslation/DeepLearning/blob/master/Batch_Normalization/%E7%BF%BB%E8%AF%91%E7%A8%BFWORD%E7%89%88.docx))
 
 **[更多文章](#deep-learning-papers)**
+
+
+### [Batch Renormalization: Towards Reducing Minibatch Dependence in Batch-Normalized Models](https://github.com/JulyEdu-PaperTranslation/DeepLearning/tree/master/Batch_remormalization)
