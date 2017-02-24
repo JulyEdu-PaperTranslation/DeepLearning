@@ -35,3 +35,11 @@
 
 
 ### [Batch Renormalization: Towards Reducing Minibatch Dependence in Batch-Normalized Models](https://github.com/JulyEdu-PaperTranslation/DeepLearning/tree/master/Batch_remormalization)
+* **题目**: 二次批量归一化：减少批量归一化模型对小批量的依赖
+* **翻译**：smile(初)，管枫(复)，seed(审)
+* **绪论**：
+ * **文章结构:**
+* **翻译全文下载**:([pdf](https://github.com/JulyEdu-PaperTranslation/DeepLearning/tree/master/Batch_remormalization))
+
+**[更多文章](#deep-learning-papers)**
+
