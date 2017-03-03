@@ -32,6 +32,8 @@
 
 Batch Normalization is quite effective at accelerating and improving the training of deep models. However, its effectiveness diminishes when the training minibatches are small, or do not consist of independent samples. We hypothesize that this is due to the dependence of model layer inputs on all the examples in the minibatch, and different activations being produced between training and inference. We propose Batch Renormalization, a simple and effective extension to ensure that the training and inference models generate the same outputs that depend on individual examples rather than the entire minibatch. Models trained with Batch Renormalization perform substantially better than batchnorm when training with small  or non-i.i.d. minibatches. At the same time, Batch Renormalization retains the benefits of batchnorm such as insensitivity to initialization and training efficiency.
 
+批规范化可以十分有效地加速和提升深度模型的训练。但是，当训练的 minibatch 较小或不是由独立的样本组成时，它的有效性会降低。我们假设这是由 minibatch 中所有样本上的模型层输入的依赖性和训练与推理之间产生的不同激活所造成的。我们提出了一种简单却有效的扩展——批再规范化，以确保训练和推理模型可以基于单个样本而非整个 minibatch 而生成同样的输出。当用小或 non-i.i.d.（非独立同分布）minibatch 训练时，用批再规范化训练的模型的表现显著优于批规范化训练的模型。与此同时，批再规范化还保留了批规范化的优点，例如对初始化不敏感和训练效率。
+
 \end{abstract}
 
 \section{Introduction}
