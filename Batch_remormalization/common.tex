@@ -84,22 +84,24 @@ The dependence of the batch-normalized activations on the entire minibatch makes
 In this paper we propose {\em Batch Renormalization}, a new extension to batchnorm. Our method ensures that the activations computed in the forward pass of the training step depend only on a single example and are identical to the activations computed in inference. This significantly improves the training on non-i.i.d. or small minibatches, compared to batchnorm, without incurring extra cost.
 
 \section{Prior Work: Batch Normalization先前工作：批规范化}
-我们对深度网络随机梯度优化有兴趣，这个任务是为了最小化误差，分解训练样本。
+我们的研究兴趣在于深度网络的随机梯度优化，目标是最小化类似如下这种由整个训练集共同定义的损失函数。
 $$\Theta = \arg \min_\Theta
 \frac{1}{N}\sum_{i=1}^N \ell_i(\Theta)$$
 
 We are interested in stochastic gradient optimization of deep networks. The task is to minimize the loss, which decomposes over training examples:
 $$\Theta = \arg \min_\Theta
 \frac{1}{N}\sum_{i=1}^N \ell_i(\Theta)$$
+
 这里$\ell_i$ 是训练样本的损失，$\Theta$是模型权重向量。在每个训练步骤，$m$ 个训练样本的一个minibatch被用来计算梯度$$\frac{1}{m} \jac{ \ell_i(\Theta)}{ \Theta}$$，对梯度的优化来调整$\Theta$。
 where $\ell_i$ is the loss incurred on the $i$th training example, and $\Theta$ is the vector of model weights. At each training step, a minibatch of $m$ examples is used to compute the  gradient
 $$\frac{1}{m} \jac{ \ell_i(\Theta)}{ \Theta}$$
 which the optimizer uses to adjust $\Theta$.
 
-考虑深度网络中的一个特定节点$x$。我们注意到计算$x$依赖所有模型参数，模型参数一改变，$x$的分布也会改变。由于它自己影响所有在它上层的损失，分布的改变会导致以上层的训练复杂化，这种被称为内部变量转移。
+考虑深度网络中的一个特定节点$x$。我们注意到计算$x$依赖所有模型参数，模型参数一改变，$x$的分布也会改变。由于它自己影响所有在它之上的层的损失函数，这种分布的改变会导致训练复杂化，这被称为内部协变量转移。
+
 Consider a particular node $x$ in a deep network. We observe that $x$ depends on all the model parameters that are used for its computation, and when those change, the distribution of $x$ also changes. Since $x$ itself affects the loss through all the layers above it, this change in distribution complicates the training of the layers above. This has been referred to as internal covariate shift.
 
-批规范化强调。考虑到一个minibatch$\setB=\{x_{1\ldots m}\}$ 的值$x$，然后按照以下公式规范化它们：
+批规范化通过调整一个minibatch $\setB=\{x_{1\ldots m}\}$ 的激活输出$x$来解决这个问题。用以下公式规范化$x$：
 Batch Normalization \cite{batchnorm} addresses it by considering the values of $x$ in a minibatch $\setB=\{x_{1\ldots m}\}$. It then normalizes them as follows:
 \begin{align*}
     \mu_\setB &\leftarrow \frac{1}{m}\sum_{i=1}^m x_i\\
@@ -109,26 +111,36 @@ Batch Normalization \cite{batchnorm} addresses it by considering the values of $
   y_i &\leftarrow \gamma\xhat_i + \beta  \equiv \BatchNorm(x_i)
 \end{align*}
 
-这里的$\gamma$ 和 $\beta$ 是训练参数(在同一过程中学习，例如随机梯度下降，跟所有其他的模型权重一样)，$\epsilon$ 是一个很小的常数。最重要的是，样本均值 $\mu_\setB$和样本标准差的计算是模型结构的一部分，它们是模型参宿自己的函数，参与反向传播。对于对于batchnorm传播公式推导简单的链式法则是引用了
-\ cite{batchnorm}。
+这里的$\gamma$ 和 $\beta$ 是训练参数(在同一过程中学习，例如随机梯度下降，跟所有其他的模型权重一样)，$\epsilon$ 是一个很小的常数。最重要的是，样本均值 $\mu_\setB$和样本标准差$\sigma_\setB$的计算是模型结构的一部分，它们作为模型参数的函数参与反向传播。对于batchnorm传播公式可以使用简单的链式法则来得出，具体计算可参考\cite{batchnorm}。
+
 Here $\gamma$ and $\beta$ are trainable parameters (learned using the same procedure, such as stochastic gradient descent, as all the other model weights), and $\epsilon$ is a small constant. Crucially, the computation of the sample mean $\mu_\setB$ and sample standard deviation $\sigma_\setB$ are part of the model architecture, are themselves functions of the model parameters, and as such participate in backpropagation. The backpropagation formulas for batchnorm are easy to derive by chain rule and are given in \cite{batchnorm}.
 
-当应用批规范化到一个激活层$\vx$，规范化产生各个维度独立(或者，卷积中每个通道特征映射)
+当在一个激活层$\vx$上使用批规范化时，我们单独规范化激活的各个维度(或者，卷积网络中的每个通道特征映射)
+
 When applying batchnorm to a layer of activations $\vx$, the normalization takes place independently for each dimension (or, in the convolutional case, for each channel or feature map).
-当$\vx$它自己是对前一层进行线性变化的结果，批规范化使模型保持不变对于$W$的规模(忽略小$\epsilon$)，这种不变形使权重初始化可能不被挑选，并使用更大的学习率。
+
+当$\vx$自己是对前一层的线性变化时，批规范化使模型优化过程不受$W$中参数绝对值大小的影响(忽略小$\epsilon$)，这种不变性使模型训练不依赖于初始化，并令使用更大的学习率成为可能。
+
 When $\vx$ is itself a result of applying a linear transform $W$ to the previous layer, batchnorm makes the model invariant to the scale of $W$ (ignoring the small $\epsilon$). This invariance makes it possible to not be picky about weight initialization, and to use larger learning rates.
 
-除了内部变量转变的减少，批规范化的另一个影响，直觉可以通过看梯度计算在不同层间的方向传播。考虑规范化层$\vxhat$，元素可能有0均值或者1 方差。对于一个思想实验，让我们假设$\vxhat$ 的维度是高斯独立的，而且，让我们将损失$\ell$做一个线性函数近似$\vxhat$: $\ell = \vg^T \vxhat$，其中$\vg = \jac{\ell}{\vxhat}$.随后$\|\vg\|^2 = \Var[\ell]$ 只取决于模型的损失，而不是我们挑选的层。这意味着梯度的规范化 w.r.t.
-$\|\jac{\ell}{\vxhat}\|$规范化层跟不同的规范化层相同。因此，梯度将流经整个网络，不发生梯度爆炸也不发生梯度消失，从而促进训练。独立性假设中，高斯和线性在实践中表现不好，梯度流实际上明显的改变了批规范化模型
+除了减少内部变量转变之外，批规范化的另一个作用，可以通过考察梯度在不同层间的传播来得到一个直观的认识。考虑一个特殊的例子，假设规范化层$\vxhat$中元素均具有零均值和单位方差。我们来做一个思想实验，让我们假设$\vxhat$ 的各个维度之间是独立的高斯分布，而且，假设损失函数$\ell$有一个线性近似$\vxhat$: $\ell = \vg^T \vxhat$，其中$\vg = \jac{\ell}{\vxhat}$.那么$\|\vg\|^2 = \Var[\ell]$ 只取决于模型的损失函数，而不取决于我们选择的层。这意味着梯度范数$\|\jac{\ell}{\vxhat}\|$在任何一个规范化的层上都是一样的。
+因此，在梯度流经整个网络的过程中，不会发生梯度爆炸也不会发生梯度消失，从而促进训练效率。虽然独立性假设，高斯假设和以及线性假设在实践中都不成立，但是批规范化还是明显的改善了梯度流。
+
 Besides the reduction of internal covariate shift, an intuition for another effect of batchnorm can be obtained by looking at the gradients computed by backpropagation for different layers. Consider the normalized layer $\vxhat$, whose elements all have zero mean and unit variance. For a thought experiment, let us assume that the dimensions of $\vxhat$ are  Gaussian and independent. Further, let us approximate the loss $\ell$ as a linear function of $\vxhat$: $\ell = \vg^T \vxhat$, where $\vg = \jac{\ell}{\vxhat}$. It then follows that  $\|\vg\|^2 = \Var[\ell]$ which only depends on the model loss and not the layer we picked. This means that the norm of the gradient w.r.t. a normalized layer $\|\jac{\ell}{\vxhat}\|$ is the same for different normalized layers. Therefore the gradients, as they flow through the network, do not explode nor vanish, thus facilitating the training. While the assumptions of independence, Gaussianity and linearity do not hold in practice, the gradient flow is in fact significantly improved in batch-normalized models.
 
-在推断阶段，标准的做法是使用移动平均 $\mu$, $\sigma^2$ 而不是minibatch的均值$\mu_\setB$方差$\sigma_\setB^2$来规范化激活。
+在推断阶段，标准的做法是使用移动平均 $\mu$, $\sigma^2$ 而不是minibatch的均值$\mu_\setB$方差$\sigma_\setB^2$来规范化激活。这使得如下的规范化激活仅取决于单个输入样本，而不是整个minibatch.
+$$
+y_\text{inference} = \frac{x-\mu}{\sigma}\cdot \gamma + \beta
+$$
+
 During inference, the standard practice is to normalize the activations using the moving averages $\mu$, $\sigma^2$ instead of minibatch mean $\mu_\setB$ and variance $\sigma_\setB^2$:
 $$
 y_\text{inference} = \frac{x-\mu}{\sigma}\cdot \gamma + \beta
 $$
 which depends only on a single input example rather than requiring a whole minibatch.
-这是很自然的的一个问题，是否我们可以简单的使用移动平均$\mu$, $\sigma$来表示训练过程的规范化，既然它将杉树规范化激活对于minibatch 中另一个样本的依赖。但是，已经观察到这样将导致模型爆炸。正如批规范化讨论的洋洋，使用移动平均将导致梯度优化与规范化相互抵消。例如，梯度步骤可能增加一个偏差或者缩放的卷积权重，尽管事实上规范化将消除这些变化对损失的影响。这将导致无限增长的模型参数，但实际上没有改善损失。因此，至关重要的是使用minibatch的时刻和通过他们反向传播。
+
+一个很自然的问题是，我们是否可以简单的在训练过程中使用移动平均$\mu$, $\sigma$来进行规范化，因为这样做可以取消minibatch中样本的内部相关性。然而，我们已经注意到这样会导致模型发散。正如批规范\cite{batchnorm}中讨论的一样，使用移动平均将导致梯度优化与规范化相互抵消。例如，梯度步骤可能增加一个偏差或者缩放的卷积权重，尽管事实上规范化将消除这些变化对损失的影响。这将导致无限增长的模型参数，而实际上却不改变损失函数。因此，至关重要的是使用minibatch的动量并通过他们反向传播。
+
 It is natural to ask whether we could simply use the moving averages $\mu$, $\sigma$ to perform the normalization during training, since this would remove the dependence of the normalized activations on the other example in the minibatch. This, however, has been observed to lead to the model blowing up. As argued in \cite{batchnorm}, such use of moving averages would cause the gradient optimization and the normalization to counteract each other. For example, the gradient step may increase a bias or scale the convolutional weights, in spite of the fact that the normalization would cancel the effect of these changes on the loss. This would result in unbounded growth of model parameters without actually improving the loss. It is thus crucial to use the minibatch moments, and to backpropagate through them.
 
 \section{Batch Renormalization批再规范化}
