@@ -30,13 +30,18 @@
 
 \begin{abstract}
 
-批规范化可以十分有效地加速和提升深度模型的训练。但是，当训练的 minibatch 较小或不是由独立的样本组成时，它的有效性会降低。我们假设这是由 minibatch 中所有样本上的模型层输入的依赖性和训练与推理之间产生的不同激活所造成的。我们提出了一种简单却有效的扩展—— 批再规范化，以确保训练和推理模型可以基于单个样本而非整个 minibatch 而生成同样的输出。当用小或 non-i.i.d.（非独立同分布）minibatch 训练时，用批再规范化训练的模型的表现显著优于批规范化训练的模型。与此同时，批再规范化还保留了批规范化的优点，例如对初始化不敏感和训练效率。
+批规范化可以十分有效地加速和提升深度模型的训练。但是，当训练的 minibatch 较小或不是由独立的样本组成时，它的有效性会降低。
+我们假设这主要归因于如下两点，一是minibatch里样本的层输入之间有相关性，二是模型的训练和推理中输出的激活不同。
+我们提出了一种简单有效的扩展——批再规范化，以确保训练和推理模型可以输出相同的激活，而且这个输出是基于单个样本而非整个 minibatch。
+当训练时的minibatch比较小或者non-i.i.d.（非独立同分布）时，用批再规范化训练的模型表现显著优于批规范化训练的模型。
+与此同时，批再规范化还保留了批规范化的优点，例如对初始化的不敏感和高训练效率。
+
 Batch Normalization is quite effective at accelerating and improving the training of deep models. However, its effectiveness diminishes when the training minibatches are small, or do not consist of independent samples. We hypothesize that this is due to the dependence of model layer inputs on all the examples in the minibatch, and different activations being produced between training and inference. We propose Batch Renormalization, a simple and effective extension to ensure that the training and inference models generate the same outputs that depend on individual examples rather than the entire minibatch. Models trained with Batch Renormalization perform substantially better than batchnorm when training with small  or non-i.i.d. minibatches. At the same time, Batch Renormalization retains the benefits of batchnorm such as insensitivity to initialization and training efficiency.
 
 \end{abstract}
 
 \section{Introduction 简介}
-批规范化近年来已经成为训练深度网络的标准工具包的一部分。通过规范化激活，批规范化帮助固定了作为模型训练的内部激活分布，使用了更高的学习率，减少了初始化敏感度。这些影响帮助加速了训练速度，有时有戏剧性的效果。批规范化成功应用于先进的架构比如残差网络。
+批规范化近年来已经成为训练深度网络的标准工具包的一部分。通过规范化激活，批规范化使模型训练时内部激活的分布更加稳定，令训练时使用更高的学习率成为可能，并减少了模型对初始化的敏感度。这些影响可以增加训练速度，而且有时候甚至可以急剧增加训练速度。鉴于此，批规范化已经成功的应用于最先进的架构中，比如残差网络(residual networks)。
 
 Batch Normalization (``batchnorm" \cite{batchnorm}) has recently become a part of the standard toolkit for training deep networks. By normalizing activations, batch normalization helps stabilize the distributions of internal activations as the model trains. Batch normalization also makes it possible to use significantly higher learning rates, and reduces the sensitivity to initialization. These effects help accelerate the training, sometimes dramatically so. Batchnorm has been successfully used to enable  state-of-the-art architectures such as residual networks \cite{resnet}.
 
@@ -44,25 +49,38 @@ Batch Normalization (``batchnorm" \cite{batchnorm}) has recently become a part o
 $$
 \xhat_i \leftarrow \frac{x_i-\mu_\setB}{\sigma_\setB}
 $$
+
 Batchnorm works on minibatches in stochastic gradient training, and uses the mean and variance of the minibatch  to normalize the activations. Specifically, consider a particular node in the deep network, producing a scalar value for each input example. Given a minibatch $\setB$ of $m$ examples, consider the values of this node, $x_1\ldots x_m$. Then batchnorm takes the form:
 $$
 \xhat_i \leftarrow \frac{x_i-\mu_\setB}{\sigma_\setB}
 $$
 
-这里的$\mu_\setB$ 是$x_1\ldots x_m$这m个样本的方差，$\sigma_\setB^2$ 是样本的方差(事实上，为了数值的稳定性增加了一个很小的值$\epsilon$)。可以清楚的看到，对于输入一个样本的规范化激活将取决于minibatch中的其他样本，这在推断阶段是不可取的，因此可以用对整个样本计算均值和方差来代替只使用minibatch。在实践中，模型经常会对minibatch均值和方差维持一个移动平均，在推断阶段使用这些移动平均来代替minibatch统计。
+这里的$\mu_\setB$ 是$x_1\ldots x_m$这m个样本的方差，$\sigma_\setB^2$ 是样本的方差(事实上，为了数值的稳定性增加了一个很小的值$\epsilon$)。
+可以清楚的看到，对于输入一个样本的规范化激活将取决于minibatch中的其他样本，这在推断阶段是不可取的，因此可以用对整个训练样本计算均值和方差来代替只使用minibatch。
+在实践中，模型经常会对minibatch的均值和方差计算移动平均，并在推断阶段使用这些移动平均来代替minibatch的统计量(均值，方差)。
+
 where $\mu_\setB$ is the sample mean of $x_1\ldots x_m$, and $\sigma_\setB^2$ is the sample variance (in practice, a small $\epsilon$ is added to it for numerical stability). It is clear that the normalized activations corresponding to an input example will depend on the other examples in the  minibatch. This is undesirable during inference, and therefore the mean and variance computed over all training data can be used instead. In practice, the model usually maintains moving averages of minibatch means and variances, and during inference uses those in place of the minibatch statistics.
 
-虽然批规范化似乎在推断阶段用整个数据取代了minibatch统计，改变了网络中的激活。事实上，这意味着上层表示以minibatch规范化作为输入的训练阶段跟以样本的统计规范化作为输入的推断阶段不同。而当minibatch 太大或者训练样本的分布是独立同分布的时候，这种差异是很小的，而实际更有利于一般化，但是，minibatch-wise归一化可能会有一些明显的缺点。
+虽然批规范化似乎在推断阶段用整个数据取代了minibatch统计，改变了网络中的激活。事实上，这意味着以minibatch规范化作为输入的训练阶段跟以样本的统计规范化作为输入的推断阶段是不同的。当minibatch 比较大或者训练样本的分布是独立同分布的时候，这种差异是很小的，所以有利于泛化，但是，minibatch范围内的规范化有一些显著的缺点。
+
 While it appears to make sense to replace the minibatch statistics with whole-data ones during inference, this changes the activations in the network. In particular, this means that the upper layers (whose inputs are normalized using the minibatch) are trained on representations different from those computed in inference (when the inputs are normalized using the population statistics). When the minibatch size is large and its elements are i.i.d. samples from the training distribution, this difference is small, and can in fact aid generalization. However,  minibatch-wise normalization may have significant drawbacks:
 
-对于小的minibatch，均值和方差的估计变得不太精确。这些不确定性再加上深度，会降低最终模型结果的准确度。而且。由于被用作计算方差的每一个样本又被用在它自己的规范化过程中，这种被用在推断阶段的规范化仿射变换是一种不太好的近似。
+对于比较小的minibatch，均值和方差的估计变得不太精确。这些不确定性再加上深度，会降低最终模型结果的准确度。而且，由于在规范化中使用的方差，是用这些被规范的样本本身来计算的，所以这些规范化参数的估计不是很好。而这些参数将会被用于推算阶段的计算中。(译者注:每个小批量用自己来规范自己，这种做法在小批量本身对全体训练样本不具有足够的代表性的时候，会产生偏差)
 For {\em small minibatches}, the estimates of the mean and variance become less accurate. These inaccuracies are compounded with depth, and reduce the quality of resulting models. Moreover, as each example is used to compute the variance used in its own normalization, the normalization operation is less well approximated by an affine transform, which is what is used in inference.
 
-非独立同分布minibatch可能对模型的规范化产生不利影响。例如，在一个度量学习的场景中，经常会偏差化minibatch样本包括显著相关的样本集。例如，对于一个大小为32的minibatch，我们可能随机选择16个标签，然后从每个标签中选出两个样本。没有规范化的话，对于minibatch 的损失计算与整个样本解耦，在我们的采样机制中可能会引入批内依赖，最差的情况下，会增加minibatch梯度的方差。有了规范化的话，在每层间的样本活动可能导致模型过拟合来适应那些特别的minibatch分布，而对于个别样本表现糟糕。
+{\em 非独立同分布minibatch }可能对模型的规范化产生不利影响。例如，在度量学习的场景中，经常会偏差化minibatch样本包括显著相关的样本集。
+例如，对于一个大小为32的minibatch，我们可能随机选择16个标签，然后从每个标签中选出两个样本。
+没有规范化的话，对于minibatch 的损失计算与整个样本解耦，在我们的采样机制中引入的批内依赖，在最差的情况下，会增加训练时minibatch梯度的方差。
+有了规范化的话，这些样本与每一层都相互作用，从而可能导致模型为了适应那些特别的minibatch分布而产生过拟合，但是对于个别样本表现糟糕。
+
 {\em Non-i.i.d. minibatches} can have a detrimental effect on models with batchnorm. For example, in a metric learning scenario (e.g. \cite{nca}), it is common to bias the minibatch sampling to include sets of examples that are known to be related. For instance, for a minibatch of size 32, we may randomly select 16 labels, then choose 2 examples for each of those labels. Without batchnorm, the loss computed for the minibatch decouples over the examples, and the intra-batch dependence introduced by our sampling mechanism may, at worst, increase the variance of the minibatch gradient. With batchnorm, however, the examples interact at every layer, which may cause the model to overfit to the specific distribution of minibatches and suffer when used on individual examples.
-依赖于整个minibatch批规范化激活使批规范化更有效，但是这也是它的缺陷来源。已经提出几种方法来减弱它的缺点。但是，不像批规范化那样易于被应用在网络中，那些方法可能要求仔细的非线性分析与minibatch 中心结合，可能改变模型的函数表示类别。另一个方法是gan，使用一个独立固定的minibatch来计算规范化参数，但是，它使训练代价更大。
+
+依赖于整个minibatch批规范化激活使批规范化更有效，但是这也是它的缺陷来源。已经提出几种方法来减弱它的缺点\cite{weightnorm,layernorm,normprop}。但是，不像批规范化那样易于被应用在网络中，那些方法可能要求仔细的非线性分析与minibatch 中心结合，可能改变模型的函数表示类别。另一个方法是\cite{gan}，使用一个独立固定的minibatch来计算规范化参数，但是，它使训练代价更大。
+
 The dependence of the batch-normalized activations on the entire minibatch makes batchnorm powerful, but it is also the source of its drawbacks. Several approaches \cite{weightnorm,layernorm,normprop} have been proposed to alleviate this. However, unlike batchnorm which can be easily applied to a network, these methods may require careful analysis of nonlinearities, may need to be combined with  minibatch centering, and may change the class of functions representable by the model. Another alternative \cite{gan} is to use a separate and fixed minibatch to compute the normalization parameters, but this makes the training more expensive.
+
 本文中，我们提出批再规范化，对于批规范化的一种新扩展。我们的方法保证与推断过程的激活计算一样，在训练步骤的前趟激活计算只依赖于单个样本。这明显的改善了小minibatch和非独立同分布的训练，跟批规范化相比，没有额外的开销。
+
 In this paper we propose {\em Batch Renormalization}, a new extension to batchnorm. Our method ensures that the activations computed in the forward pass of the training step depend only on a single example and are identical to the activations computed in inference. This significantly improves the training on non-i.i.d. or small minibatches, compared to batchnorm, without incurring extra cost.
 
 \section{Prior Work: Batch Normalization先前工作：批规范化}
