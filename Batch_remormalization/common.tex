@@ -35,7 +35,7 @@ Batch Normalization is quite effective at accelerating and improving the trainin
 
 \end{abstract}
 
-\section{Introduction}
+\section{Introduction 简介}
 批规范化近年来已经成为训练深度网络的标准工具包的一部分。通过规范化激活，批规范化帮助固定了作为模型训练的内部激活分布，使用了更高的学习率，减少了初始化敏感度。这些影响帮助加速了训练速度，有时有戏剧性的效果。批规范化成功应用于先进的架构比如残差网络。
 
 Batch Normalization (``batchnorm" \cite{batchnorm}) has recently become a part of the standard toolkit for training deep networks. By normalizing activations, batch normalization helps stabilize the distributions of internal activations as the model trains. Batch normalization also makes it possible to use significantly higher learning rates, and reduces the sensitivity to initialization. These effects help accelerate the training, sometimes dramatically so. Batchnorm has been successfully used to enable  state-of-the-art architectures such as residual networks \cite{resnet}.
@@ -52,20 +52,20 @@ $$
 这里的$\mu_\setB$ 是$x_1\ldots x_m$这m个样本的方差，$\sigma_\setB^2$ 是样本的方差(事实上，为了数值的稳定性增加了一个很小的值$\epsilon$)。可以清楚的看到，对于输入一个样本的规范化激活将取决于minibatch中的其他样本，这在推断阶段是不可取的，因此可以用对整个样本计算均值和方差来代替只使用minibatch。在实践中，模型经常会对minibatch均值和方差维持一个移动平均，在推断阶段使用这些移动平均来代替minibatch统计。
 where $\mu_\setB$ is the sample mean of $x_1\ldots x_m$, and $\sigma_\setB^2$ is the sample variance (in practice, a small $\epsilon$ is added to it for numerical stability). It is clear that the normalized activations corresponding to an input example will depend on the other examples in the  minibatch. This is undesirable during inference, and therefore the mean and variance computed over all training data can be used instead. In practice, the model usually maintains moving averages of minibatch means and variances, and during inference uses those in place of the minibatch statistics.
 
-虽然批规范化似乎在推断阶段用整个数据取代了minibatch统计，改变了网络中的激活。事实上，这意味着上层表示以minibatch规范化作为输入的训练阶段跟以样本的统计规范化作为输入的推断阶段不同。而当minibatch太大或者训练样本的分布是独立同分布的时候，这种差异是很小的，而实际更有利于一般化，但是，minibatch-wise归一化可能会有一些明显的缺点。
+虽然批规范化似乎在推断阶段用整个数据取代了minibatch统计，改变了网络中的激活。事实上，这意味着上层表示以minibatch规范化作为输入的训练阶段跟以样本的统计规范化作为输入的推断阶段不同。而当minibatch 太大或者训练样本的分布是独立同分布的时候，这种差异是很小的，而实际更有利于一般化，但是，minibatch-wise归一化可能会有一些明显的缺点。
 While it appears to make sense to replace the minibatch statistics with whole-data ones during inference, this changes the activations in the network. In particular, this means that the upper layers (whose inputs are normalized using the minibatch) are trained on representations different from those computed in inference (when the inputs are normalized using the population statistics). When the minibatch size is large and its elements are i.i.d. samples from the training distribution, this difference is small, and can in fact aid generalization. However,  minibatch-wise normalization may have significant drawbacks:
 
 对于小的minibatch，均值和方差的估计变得不太精确。这些不确定性再加上深度，会降低最终模型结果的准确度。而且。由于被用作计算方差的每一个样本又被用在它自己的规范化过程中，这种被用在推断阶段的规范化仿射变换是一种不太好的近似。
 For {\em small minibatches}, the estimates of the mean and variance become less accurate. These inaccuracies are compounded with depth, and reduce the quality of resulting models. Moreover, as each example is used to compute the variance used in its own normalization, the normalization operation is less well approximated by an affine transform, which is what is used in inference.
 
-非独立同分布minibatch可能对模型的规范化产生不利影响。例如，在一个度量学习的场景中，经常会偏差化minibatch样本包括显著相关的样本集。例如，对于一个大小为32的minibatch，我们可能随机选择16个标签，然后从每个标签中选出两个样本。没有规范化的话，对于minibatch的损失计算与整个样本解耦，在我们的采样机制中可能会引入批内依赖，最差的情况下，会增加minibatch梯度的方差。有了规范化的话，在每层间的样本活动可能导致模型过拟合来适应那些特别的minibatch分布，而对于个别样本表现糟糕。
+非独立同分布minibatch可能对模型的规范化产生不利影响。例如，在一个度量学习的场景中，经常会偏差化minibatch样本包括显著相关的样本集。例如，对于一个大小为32的minibatch，我们可能随机选择16个标签，然后从每个标签中选出两个样本。没有规范化的话，对于minibatch 的损失计算与整个样本解耦，在我们的采样机制中可能会引入批内依赖，最差的情况下，会增加minibatch梯度的方差。有了规范化的话，在每层间的样本活动可能导致模型过拟合来适应那些特别的minibatch分布，而对于个别样本表现糟糕。
 {\em Non-i.i.d. minibatches} can have a detrimental effect on models with batchnorm. For example, in a metric learning scenario (e.g. \cite{nca}), it is common to bias the minibatch sampling to include sets of examples that are known to be related. For instance, for a minibatch of size 32, we may randomly select 16 labels, then choose 2 examples for each of those labels. Without batchnorm, the loss computed for the minibatch decouples over the examples, and the intra-batch dependence introduced by our sampling mechanism may, at worst, increase the variance of the minibatch gradient. With batchnorm, however, the examples interact at every layer, which may cause the model to overfit to the specific distribution of minibatches and suffer when used on individual examples.
-依赖于整个minibatch批规范化激活使批规范化更有效，但是这也是它的缺陷来源。已经提出几种方法来减弱它的缺点。但是，不像批规范化那样易于被应用在网络中，那些方法可能要求仔细的非线性分析与minibatch中心结合，可能改变模型的函数表示类别。另一个方法是gan，使用一个独立固定的minibatch来计算规范化参数，但是，它使训练代价更大。
+依赖于整个minibatch批规范化激活使批规范化更有效，但是这也是它的缺陷来源。已经提出几种方法来减弱它的缺点。但是，不像批规范化那样易于被应用在网络中，那些方法可能要求仔细的非线性分析与minibatch 中心结合，可能改变模型的函数表示类别。另一个方法是gan，使用一个独立固定的minibatch来计算规范化参数，但是，它使训练代价更大。
 The dependence of the batch-normalized activations on the entire minibatch makes batchnorm powerful, but it is also the source of its drawbacks. Several approaches \cite{weightnorm,layernorm,normprop} have been proposed to alleviate this. However, unlike batchnorm which can be easily applied to a network, these methods may require careful analysis of nonlinearities, may need to be combined with  minibatch centering, and may change the class of functions representable by the model. Another alternative \cite{gan} is to use a separate and fixed minibatch to compute the normalization parameters, but this makes the training more expensive.
 本文中，我们提出批再规范化，对于批规范化的一种新扩展。我们的方法保证与推断过程的激活计算一样，在训练步骤的前趟激活计算只依赖于单个样本。这明显的改善了小minibatch和非独立同分布的训练，跟批规范化相比，没有额外的开销。
 In this paper we propose {\em Batch Renormalization}, a new extension to batchnorm. Our method ensures that the activations computed in the forward pass of the training step depend only on a single example and are identical to the activations computed in inference. This significantly improves the training on non-i.i.d. or small minibatches, compared to batchnorm, without incurring extra cost.
 
-\section{Prior Work: Batch Normalization}先前工作：批规范化
+\section{Prior Work: Batch Normalization先前工作：批规范化}
 我们对深度网络随机梯度优化有兴趣，这个任务是为了最小化误差，分解训练样本。
 $$\Theta = \arg \min_\Theta
 \frac{1}{N}\sum_{i=1}^N \ell_i(\Theta)$$
@@ -81,7 +81,7 @@ which the optimizer uses to adjust $\Theta$.
 考虑深度网络中的一个特定节点$x$。我们注意到计算$x$依赖所有模型参数，模型参数一改变，$x$的分布也会改变。由于它自己影响所有在它上层的损失，分布的改变会导致以上层的训练复杂化，这种被称为内部变量转移。
 Consider a particular node $x$ in a deep network. We observe that $x$ depends on all the model parameters that are used for its computation, and when those change, the distribution of $x$ also changes. Since $x$ itself affects the loss through all the layers above it, this change in distribution complicates the training of the layers above. This has been referred to as internal covariate shift.
 
-批规范化强调。考虑到一个minibatch$\setB=\{x_{1\ldots m}\}$的值$x$，然后按照以下公式规范化它们：
+批规范化强调。考虑到一个minibatch$\setB=\{x_{1\ldots m}\}$ 的值$x$，然后按照以下公式规范化它们：
 Batch Normalization \cite{batchnorm} addresses it by considering the values of $x$ in a minibatch $\setB=\{x_{1\ldots m}\}$. It then normalizes them as follows:
 \begin{align*}
     \mu_\setB &\leftarrow \frac{1}{m}\sum_{i=1}^m x_i\\
@@ -100,7 +100,7 @@ When applying batchnorm to a layer of activations $\vx$, the normalization takes
 当$\vx$它自己是对前一层进行线性变化的结果，批规范化使模型保持不变对于$W$的规模(忽略小$\epsilon$)，这种不变形使权重初始化可能不被挑选，并使用更大的学习率。
 When $\vx$ is itself a result of applying a linear transform $W$ to the previous layer, batchnorm makes the model invariant to the scale of $W$ (ignoring the small $\epsilon$). This invariance makes it possible to not be picky about weight initialization, and to use larger learning rates.
 
-除了内部变量转变的减少，批规范化的另一个影响，直觉可以通过看梯度计算在不同层间的方向传播。考虑规范化层$\vxhat$，元素可能有0均值或者1方差。对于一个思想实验，让我们假设$\vxhat$ 的维度是高斯独立的，而且，让我们将损失$\ell$做一个线性函数近似$\vxhat$: $\ell = \vg^T \vxhat$，其中$\vg = \jac{\ell}{\vxhat}$.随后$\|\vg\|^2 = \Var[\ell]$ 只取决于模型的损失，而不是我们挑选的层。这意味着梯度的规范化 w.r.t.
+除了内部变量转变的减少，批规范化的另一个影响，直觉可以通过看梯度计算在不同层间的方向传播。考虑规范化层$\vxhat$，元素可能有0均值或者1 方差。对于一个思想实验，让我们假设$\vxhat$ 的维度是高斯独立的，而且，让我们将损失$\ell$做一个线性函数近似$\vxhat$: $\ell = \vg^T \vxhat$，其中$\vg = \jac{\ell}{\vxhat}$.随后$\|\vg\|^2 = \Var[\ell]$ 只取决于模型的损失，而不是我们挑选的层。这意味着梯度的规范化 w.r.t.
 $\|\jac{\ell}{\vxhat}\|$规范化层跟不同的规范化层相同。因此，梯度将流经整个网络，不发生梯度爆炸也不发生梯度消失，从而促进训练。独立性假设中，高斯和线性在实践中表现不好，梯度流实际上明显的改变了批规范化模型
 Besides the reduction of internal covariate shift, an intuition for another effect of batchnorm can be obtained by looking at the gradients computed by backpropagation for different layers. Consider the normalized layer $\vxhat$, whose elements all have zero mean and unit variance. For a thought experiment, let us assume that the dimensions of $\vxhat$ are  Gaussian and independent. Further, let us approximate the loss $\ell$ as a linear function of $\vxhat$: $\ell = \vg^T \vxhat$, where $\vg = \jac{\ell}{\vxhat}$. It then follows that  $\|\vg\|^2 = \Var[\ell]$ which only depends on the model loss and not the layer we picked. This means that the norm of the gradient w.r.t. a normalized layer $\|\jac{\ell}{\vxhat}\|$ is the same for different normalized layers. Therefore the gradients, as they flow through the network, do not explode nor vanish, thus facilitating the training. While the assumptions of independence, Gaussianity and linearity do not hold in practice, the gradient flow is in fact significantly improved in batch-normalized models.
 
@@ -110,34 +110,48 @@ $$
 y_\text{inference} = \frac{x-\mu}{\sigma}\cdot \gamma + \beta
 $$
 which depends only on a single input example rather than requiring a whole minibatch.
-这是很自然的的一个问题，是否我们可以简单的使用移动平均$\mu$, $\sigma$来表示训练过程的规范化，既然它将杉树规范化激活对于minibatch中另一个样本的依赖。但是，已经观察到这样将导致模型爆炸。正如批规范化讨论的洋洋，使用移动平均将导致梯度优化与规范化相互抵消。例如，梯度步骤可能增加一个偏差或者缩放的卷积权重，尽管事实上规范化将消除这些变化对损失的影响。这将导致无限增长的模型参数，但实际上没有改善损失。因此，至关重要的是使用minibatch的时刻和通过他们反向传播。
+这是很自然的的一个问题，是否我们可以简单的使用移动平均$\mu$, $\sigma$来表示训练过程的规范化，既然它将杉树规范化激活对于minibatch 中另一个样本的依赖。但是，已经观察到这样将导致模型爆炸。正如批规范化讨论的洋洋，使用移动平均将导致梯度优化与规范化相互抵消。例如，梯度步骤可能增加一个偏差或者缩放的卷积权重，尽管事实上规范化将消除这些变化对损失的影响。这将导致无限增长的模型参数，但实际上没有改善损失。因此，至关重要的是使用minibatch的时刻和通过他们反向传播。
 It is natural to ask whether we could simply use the moving averages $\mu$, $\sigma$ to perform the normalization during training, since this would remove the dependence of the normalized activations on the other example in the minibatch. This, however, has been observed to lead to the model blowing up. As argued in \cite{batchnorm}, such use of moving averages would cause the gradient optimization and the normalization to counteract each other. For example, the gradient step may increase a bias or scale the convolutional weights, in spite of the fact that the normalization would cancel the effect of these changes on the loss. This would result in unbounded growth of model parameters without actually improving the loss. It is thus crucial to use the minibatch moments, and to backpropagate through them.
 
-\section{Batch Renormalization}
-
+\section{Batch Renormalization批再规范化}
+批规范化时，网络中的激活在训练和推断过程中不同，由于规范化在两个模型中不同，在这里，我们主要为了改善这个，仍然保留批规范化的优点。
 With batchnorm, the activities in the network differ between training and inference, since the normalization is done differently between the two models. Here, we aim to rectify this, while retaining  the benefits of batchnorm.
-
+让我们观察一下，如果我们有一个minibatch，或者使用minibatch 统计值或者他们的平均窗口来规范化一个节点$x$，然后这两种规范化结果是一个仿射变换关系。
 Let us observe that if we have a minibatch and normalize a particular node  $x$ using either the minibatch statistics or their moving averages, then the results of these two normalizations are related by an affine transform.
+$$
+\frac{x_i-\mu}{\sigma} = \frac{x_i-\mu_\setB}{\sigma_\setB} \cdot r + d,\ \ \ \ \text{where $ r = \frac{\sigma_\setB}{\sigma}, \ \  d = \frac{\mu_\setB-\mu}{\sigma}$}
+$$
+特别的，令$\mu$是$x$的一个均值的估计，$\sigma$是标注差的估计值，或许计算是以最后几个minibatch的移动平均，然后，我们有：
 Specifically, let $\mu$ be an estimate of the mean of $x$, and $\sigma$ be an estimate of its standard deviation, computed perhaps as a moving average over the last several minibatches. Then, we have:
 $$
 \frac{x_i-\mu}{\sigma} = \frac{x_i-\mu_\setB}{\sigma_\setB} \cdot r + d,\ \ \ \ \text{where $ r = \frac{\sigma_\setB}{\sigma}, \ \  d = \frac{\mu_\setB-\mu}{\sigma}$}
 $$
-If  $\sigma = \e[\sigma_\setB]$ and $\mu=\e[\mu_\setB]$, then $\e[r] = 1$ and $\e[d] = 0$  (the expectations are w.r.t. a minibatch $\setB$). Batch Normalization, in fact, simply sets $r=1$, $d=0$.
 
+如果$\sigma = \e[\sigma_\setB]$，$\mu=\e[\mu_\setB]$，$\e[r] = 1$，$\e[d] = 0$（关于一个minibatch$\setB$的计算）。事实上，批规范化，简单的设置$r=1$, $d=0$.
+If  $\sigma = \e[\sigma_\setB]$ and $\mu=\e[\mu_\setB]$, then $\e[r] = 1$ and $\e[d] = 0$  (the expectations are w.r.t. a minibatch $\setB$). Batch Normalization, in fact, simply sets $r=1$, $d=0$.
+我们建议保留$r$和$d$,但是把他们当做为了计算梯度的常数处理。换句话说，我们扩张网络，包含了一个批规范化层，使用每维的仿射变换应用到规范化激活中，我们把常数$r$ 和$d$ 的仿射变换固定，即使
+他们从minibatch本身计算。最重要要注意的是，这种变换是恒等变换，只要$\sigma = \e[\sigma_\setB]$，$\mu=\e[\mu_\setB]$。
+我们提出使用这种仿射变换的批规范化作为{\em 批再规范化}:对于指定的minibatch，$r$ 和$d$事实上是正确的值，不同于minibatch的统计值。它将允许上层观察到这个"正确"的激活，即，将被推断模型产生的那个值。
 We propose to retain $r$ and $d$, but treat them as constants for the purposes of gradient computation. In other words, we augment a  network, which contains batch normalization layers, with a per-dimension affine transformation applied to the normalized activations. We treat the parameters $r$ and $d$ of this affine transform as fixed, even though they were computed from the minibatch itself. It is important to note that this transform  is identity in expectation, as long as  $\sigma = \e[\sigma_\setB]$ and $\mu=\e[\mu_\setB]$. We refer to batch normalization augmented with this affine transform as {\em Batch Renormalization}: the fixed (for the given minibatch) $r$ and $d$ correct for the fact that the minibatch statistics differ from the population ones. This allows the above layers to observe the ``correct"  activations -- namely, the ones that would be generated by the inference model.
 
+实际上，使用没有修正的单独的批规范化在确定数量的迭代次数后，对于训练模型是有益的，然后增加了允许修正的量。我们做这个是给$r$和$d$强加了限制，初始时限制分别限制他们的值为$1$ 和$0$, 然后慢慢放宽限制。
 In practice, it is beneficial to train the model for a certain number of iterations with batchnorm alone, without the correction, then ramp up the amount of allowed correction. We do this by imposing bounds on $r$ and $d$, which initially constrain them to $1$ and $0$, respectively, and then are gradually relaxed.
 
 \begin{algorithm}[t]
+  \caption{\em 使用批再规范化的训练（上）和推理（下），其在一个 minibatch 上应用了激活 x。在反向传播过程中使用了标准的链式法则。用 stop-gradient 标记的值被当作一个给定训练步骤的常量处理，而且该梯度不会经由它们传播。
+  }
   \caption{\em Training (top) and inference (bottom) with Batch Renormalization, applied to activation $x$ over a mini-batch. During backpropagation, standard chain rule is used.
   The values marked with \texttt{stop\_gradient} are treated as constant for a given training step, and the gradient is not propagated through them.
   }
 \label{alg-bn}
   \begin{algorithmic}
   \REQUIRE
+  对于一个训练mini-batch，$x$的值
   Values of $x$ over a training mini-batch
   $\setB=\{x_{1\ldots m}\}$;
- parameters $\gamma$,
+  参数$\gamma$,
+
+ parameters $\gamma$,$\beta$; 目前的均值 $\mu$ ，标准差 $\sigma$; 移动平均更新率$\Delta$; 最大被允许修正值 $\rmax$, $\dmax$.
     $\beta$; current moving mean $\mu$ and standard deviation $\sigma$; moving average update rate $\Delta$; maximum allowed correction $\rmax$, $\dmax$.
   \ENSURE $\{y_i =  \text{BatchRenorm}(x_i)\}$; updated $\mu$, $\sigma$.
   \begin{flalign*}
@@ -164,6 +178,7 @@ In practice, it is beneficial to train the model for a certain number of iterati
 \end{algorithmic}
 \end{algorithm}
 
+算法\ref{alg-bn} 呈现了批再规范化。不像批规范化，训练的移动平均只在推断中使用，批再规范化使用$\mu$ 和$\sigma$在训练中用来执行纠正。我们对这些平均值采用相当高的更新$\Delta$，以确保在多个minibatch的平均中收益，但相对于模型参数不过时。我们显式更新指数衰减移动平均$\mu$ 和 $\sigma$,使用反向传播的梯度计算来优化模型中余下的部分。
 Algorithm \ref{alg-bn} presents Batch Renormalization. Unlike batchnorm, where the moving averages are computed during training but used only for inference, Batch Renorm does use $\mu$ and $\sigma$ during training to perform the correction. We use a fairly high rate of update $\Delta$ for these averages, to ensure that they benefit from averaging multiple batches but do not become stale relative to the model parameters. We explicitly update the exponentially-decayed moving averages $\mu$ and $\sigma$, and optimize the rest of the model using gradient optimization, with the gradients calculated via backpropagation:
 \begin{align*}
 \jac{\ell}{\xhat_i} &= \jac{\ell}{y_i}\cdot \gamma \\
@@ -180,23 +195,33 @@ Algorithm \ref{alg-bn} presents Batch Renormalization. Unlike batchnorm, where t
   \\
   \jac{\ell}{\beta} &= \sum_{i=1}^m \jac{\ell}{y_i}
 \end{align*}
-These gradient equations reveal another interpretation of Batch Renormalization. Because the loss $\ell$ is unaffected when all $x_i$ are shifted or scaled by the same amount,
+
+这些梯度方程揭露了批再规范化的另一种解释，因为当$x_i$平移或者缩放相同倍数时，损失$\ell$是不受影响的，函数$\ell(\{x_i+t\})$和$\ell(\{x_i\cdot(1+t)\})$在$t$中是常数，在$t=0$计算他们的导数，给出
+These gradient equations reveal another interpretation of Batch Renormalization. Because the loss $\ell$ is unaffected when all $x_i$ are shifted or scaled by the same amount,$\sum_{i=1}^m \jac{\ell}{x_i} = 0$ 和 $\sum_{i=1}^m x_i\,\jac{\ell}{x_i} = 0$.因此，如果我们考虑$m$维向量$\big\{\jac{\ell}{x_i}\big\}$(在这个minibatch的每个样本的每个元素)，更远的考虑两个向量$\vp_0=(1,\ldots,1)$ 和 $\vp_1=(x_1,\ldots,x_m)$,然后$\big\{\jac{\ell}{x_i}\big\}$依赖于$\vp_0$ 和 $\vp_1$的零空间。
 the functions $\ell(\{x_i+t\})$ and $\ell(\{x_i\cdot(1+t)\})$ are constant in $t$, and computing their derivatives at $t=0$ gives $\sum_{i=1}^m \jac{\ell}{x_i} = 0$ and $\sum_{i=1}^m x_i\,\jac{\ell}{x_i} = 0$. Therefore, if we consider the $m$-dimensional vector $\big\{\jac{\ell}{x_i}\big\}$ (with one element per example in the minibatch), and further consider two vectors
 $\vp_0=(1,\ldots,1)$ and $\vp_1=(x_1,\ldots,x_m)$, then $\big\{\jac{\ell}{x_i}\big\}$ lies in the null-space of $\vp_0$ and $\vp_1$.
+
+事实上，很容易看到批再规范化累积从$\big\{\jac{\ell}{\xhat_i}\big\}$反向传播求梯度$\big\{\jac{\ell}{x_i}\big\}$，然后投影到$\vp_0$ 和 $\vp_1$的零空间，这个变换是相当于反向传播$\frac{x-\mu}{\sigma}$，但是结合了零空间投影。换言之，批再规范化允许我们使用训练中的移动平均$\mu$和$\sigma$来规范化，使用在反向传播的额外投影层达到目的。
 In fact, it is easy to see from the Batch Renorm backprop formulas that to compute the gradient $\big\{\jac{\ell}{x_i}\big\}$ from  $\big\{\jac{\ell}{\xhat_i}\big\}$, we need to first scale the latter by $r/\sigma_\setB$, then project it onto the null-space of $\vp_0$ and $\vp_1$. For $r=\frac{\sigma_\setB}{\sigma}$, this is equivalent to the backprop for the transformation $\frac{x-\mu}{\sigma}$, but combined with the null-space projection. In other words, Batch Renormalization allows us to normalize using moving averages $\mu$, $\sigma$ in training, and makes it work using the extra projection step in backprop.
 
+批再规范化跟批规范化有许多共同的有益的属性，比如初始化不敏感和以更高的学习率有效的训练。不像批规范化，我们的的模型保证训练的所有层的内部表示将会实际性在推断中被使用。
 Batch Renormalization shares many of the beneficial properties of batchnorm, such as insensitivity to initialization and ability to train efficiently with large learning rates. Unlike batchnorm, our method ensures that that all layers are trained on internal representations that will be actually used during inference.
 
 
 \section{Results}
-
+为了评估批再规范化，我们把它应用到图像分类的问题。我们的基线模型是inception-v3模型训练1000个类的ImageNet训练集，并在ImageNet 数据进行验证。在基线模型，批规范化在卷积之后，ReLU 之前。
 To evaluate Batch Renormalization, we applied it to the problem of image classification. Our baseline model is Inception v3 \cite{inception-v3}, trained on 1000 classes from ImageNet training set \cite{imagenet}, and evaluated on the ImageNet validation data. In the baseline model, batchnorm was used after convolution and before the ReLU \cite{relu}.
+
+应用批再规范化，我们只是简单的在模型中让它代替批规范化。这两种方法规范每个特征映射到样本以及样本的空间位置。我们固定大小$\gamma=1$，因为它可以通过ReLU传播吸收进入下一层。
 To apply Batch Renorm, we simply swapped it into the model in place of batchnorm. Both methods normalize each feature map over examples as well as over spatial locations. We fix the scale $\gamma=1$, since it could be propagated through the ReLU and absorbed into the next layer.
 
+训练使用50个同步的worker，每个worker每一个训练步骤处理一个32个样本的minibatch。所有50个minibatch 的梯度计算进行汇总，然后使用RMSProp优化器。通常的做法是，推断模型使用所有模型参数的指数衰减移动平均，包括批规范化和批再规范化都要计算的$\mu$ 和 $\sigma$。
 The training used 50 synchronized workers \cite{syncreplicas}. Each worker processed a minibatch of 32 examples per training step. The gradients computed for all 50 minibatches were aggregated and then used by the RMSProp optimizer \cite{rmsprop}. As is common practice, the inference model used exponentially-decayed moving averages of all model parameters, including the $\mu$ and $\sigma$ computed by both batchnorm and Batch Renorm.
 
+对批再规范化，开始的5000个训练步骤，我们使用$\rmax=1$, $\dmax=0$(就是简单的批规范化)，之后逐渐放松，直到在40k步时达到$\rmax=3$，在25k步时$\dmax=5$ 
 For Batch Renorm, we used $\rmax=1$, $\dmax=0$ (i.e. simply batchnorm) for the first 5000 training steps, after which these were gradually relaxed to reach $\rmax=3$ at 40k steps, and $\dmax=5$ at 25k steps. These final values resulted in clipping a small fraction of $r$s, and none of $d$s. However, at the beginning of training, when the learning rate was larger, it proved important to increase $\rmax$ slowly: otherwise, large gradients were observed to suddenly and severely increase the loss. We have found clipping to be less important for those Batch Renorm layers that are followed by another normalization layer. The intuition is that for such layers, scaling up all the corrections $r$ will leave the model output and gradients unchanged since the next normalization layer will cancel out the effects the larger correction.
 
+除了与规范化有关的参数，所有超参数的值在模型和整个实验中是固定的。
 All the hyperparameters other than those related to normalization were fixed between the models and across experiments.
 
 \subsection{Baseline}
@@ -206,14 +231,17 @@ All the hyperparameters other than those related to normalization were fixed bet
     \begin{tabular}{@{}c@{}}
 \includegraphics[width=\columnwidth]{baseline.eps}
 \end{tabular}
-    分别使用批规范化和批再规范化的 Inception-v3 模型的验证 top-1 准确度（validation top-1 accuracy），模型是在 50 个同步的工作器（worker）上训练的，其中每一个工作器处理大小为 32 的 minibatch。使用批再规范化的模型实现了略高一点的验证准确度。
+    \caption{\em 分别使用批规范化和批再规范化的 Inception-v3 模型的验证 top-1 准确度（validation top-1 accuracy），模型是在 50 个同步的工作器（worker）上训练的，其中每一个工作器处理大小为 32 的 minibatch。使用批再规范化的模型实现了略高一点的验证准确度。
+    }
     \caption{\em Validation top-1 accuracy of Inception-v3 model with batchnorm and its Batch Renorm version, trained on 50 synchronized workers, each processing minibatches of size 32. The Batch Renorm model achieves a marginally higher validation accuracy.
     }
     \label{fig-baseline}
 \end{figure}
 
+作为基线，我们使用大小为32的minibatch批规范化模型训练，更特定的，批规范化被应用在50个minibatch的每一个；每个样本使用32个样本规范化，但是梯度计算的结果在50个minibatch上汇总，这个模型验证 top-1 准确度在130k 训练步后为$78.3\%$
 As a baseline, we trained the batchnorm model using the minibatch size of 32. More specifically, batchnorm was applied to each of the 50 minibatches; each example was normalized using 32 examples, but the resulting gradients were aggregated over 50 minibatches. This model achieved the top-1 validation accuracy of $78.3\%$ after 130k training steps.
 
+为了验证批再规范化并没有在这样的minibatch上减少性能，我们也训练批规范化模型，见表\ref{fig-baseline}。模型的测试结果接近基线，在同样步后取得了稍微更高的测试准确度($78.5\%$)。
 To verify that Batch Renorm does not diminish performance on such minibatches, we also trained the model with Batch Renorm, see Figure \ref{fig-baseline}. The test accuracy of this model closely tracked the baseline, achieving a slightly higher test accuracy ($78.5\%$) after the same number of steps.
 
 \subsection{Small minibatches}
@@ -227,10 +255,12 @@ To verify that Batch Renorm does not diminish performance on such minibatches, w
     }
     \label{fig-small}
 \end{figure}
-
+为了探索批再规范化在小minibatch训练的有效性，我们减少使用规范化的样本的数量到4.每个大小为32的minibatch因此被分为只有4个样本的更小的microbatches;每个microbatches被单独规范化，但是，每个minibatch的损失仍按照之前那样计算。换句话说，每个步骤的梯度仍然是汇总1600个样本，但是规范化只涉及4个样本的组合而不是基线中的32个样本，表\ref{fig-small}呈现了结果。
 To investigate the effectiveness of Batch Renorm when training on small minibatches, we reduced the number of examples  used for normalization to 4. Each minibatch of size 32 was thus broken into ``microbatches" each having 4 examples; each microbatch was normalized independently, but the loss for each minibatch was computed as before. In other words, the gradient was still aggregated over 1600 examples per step, but the normalization involved groups of 4 examples rather than 32 as in the baseline. Figure \ref{fig-small} shows the results.
 
-The validation accuracy of the batchnorm model is significantly lower than the baseline that normalized over minibatches of size 32, and training is slow, achieving $74.2\%$ at 210k steps. We obtain a substantial improvement much faster ($76.5\%$ at 130k steps) by replacing batchnorm with Batch Renorm, However, the resulting test accuracy is still below what we get when applying either batchnorm or Batch Renorm to size 32 minibatches. Although Batch Renorm improves the training with small minibatches, it does not eliminate the benefit of having larger ones.
+这种验证中，批规范化模型的精度明显更低于基线中minibatch大小为32的规范化，并且训练速度慢，在210k步后得到$74.2\%$。我们通过把批规范化替换为批再规范化后，得到一个速度更快的实质性的改善(在130k steps 后130k steps)，但是测试精度仍然低于大小为32的minibatch的批规范化和批再规范化。虽然批再规范化改善了小minibatch训练，不排除它有更大的收益。
+The validation accuracy of the batchnorm model is significantly lower than the baseline that normalized over minibatches of size 32, and training is slow, achieving $74.2\%$ at 210k steps. We obtain a substantial improvement much faster (130k steps at 130k steps) by replacing batchnorm with Batch Renorm, However, the resulting test accuracy is still below what we get when applying either batchnorm or Batch Renorm to size 32 minibatches. Although Batch Renorm improves the training with small minibatches, it does not eliminate the benefit of having larger ones.
+
 
 % We observed a further increase in validation accuracy to $76.8\%$ when the maximum correction ratio $\rmax$ is further increased for those Batch Renorm layers that are followed by another normalization layer.
 
@@ -247,14 +277,18 @@ The validation accuracy of the batchnorm model is significantly lower than the b
     \label{fig-biased}
 \end{figure}
 
+当minibatch中的样本不是独立采样时，批规范化可能表现较差。带依赖的采样可能对于有些任务是必要的，如度量学习。我们可能想要保证具有相同标签的图比那些不同标签的图有更相似的表示，想要学习到这个，我们需要在同一minibatch中发现合理数量的相同标签图相对。
 When examples in a minibatch are not sampled independently, batchnorm can
 perform rather poorly. However, sampling with dependencies  may be necessary for tasks such as for metric learning \cite{nca,facenet}. We may want to ensure that images with the same label have more similar representations than otherwise, and to learn this we require that a reasonable number of same-label image pairs can be found within the same minibatch.
 
-In this experiment (Figure \ref{fig-biased}), we selected each minibatch of size 32 by randomly sampling 16 labels (out of the total 1000) with replacement, then randomly selecting 2 images for each of those labels.
+在这个实验中，每个大小为32的minibatch通过随机抽样的16个标签（总1000）代替，然后对于每个标签随机选择2张图像。批规范化训练的时候，测试精度是比独立同分布样本低，只有$67\%$。惊讶的是，甚至训练精度比独立同分布样本的测试精度要低。事实上，drop的表现跟过拟合是一致的。我们怀疑在实际中会发生，这不直接翻译到单独的图像分类，从而产生训练数据的精度计算下降。为了验证这一点，我们也评估在``训练模式"的模型，例如，使用minibatch统计值$\mu_\setB$, $\sigma_\setB$而不是移动平均$\mu$, $\sigma$,，每个测试minibatch大小为50，使用相同的过程采样出训练minibatch -- 25个标签，每个标签两张图。正如预期的那样，这样表现更好，得到$76.5\%$，尽管准确率仍在基线之下。当然，这种评估方案通常是不可行的，因为我们希望图像表示是确定性的单图像功能。
+In this experiment (Figure \ref{fig-biased}), we selected each minibatch of size 32 by randomly sampling 16 labels (out of the total 1000) with replacement, then randomly selecting 2 images for each of those labels.模型学习预测标签的图像在一个集合，其中每个图像具有同一标签的对应物
 When training with batchnorm, the test accuracy is much lower than for i.i.d. minibatches, achieving only $67\%$. Surprisingly, even the {\em training} accuracy is much lower ($72.8\%$) than the {\em test} accuracy in the i.i.d. case, and in fact exhibits a drop that is consistent with overfitting. We suspect that this is in fact what happens: the model learns to predict labels for images that come in a set, where each image has a counterpart with the same label. This does not directly translate to classifying images individually, thus producing a drop in the accuracy computed on the training data. To verify this, we also evaluated the model in the ``training mode", i.e. using minibatch statistics $\mu_\setB$, $\sigma_\setB$ instead of moving averages $\mu$, $\sigma$, where each test minibatch had size 50 and was obtained using the same procedure as the training minibatches -- 25 labels, with 2 images per label. As expected, this does much better, achieving $76.5\%$, though still below the baseline accuracy. Of course, this evaluation scenario is usually infeasible, as we want the image representation to be a deterministic function of that image alone.
 
+我们可以将每个minibatch分成一半的大小为16个来改善准确性问题，使每对图像属于同一类的，一张图像被分配到第一半minibatch，另一张图像被分为另一半minibatch。每一半具有更大的独立同分布性质，这就得到了一个更好的测试精度（在140K的步骤$77.4\%$ ），但仍低于基线。这种方法只适用于每个标签的样本数量很小的时候（因为这决定了一个minibatch 需要被分成更小的microbatches）。
 We can improve the accuracy for this problem by splitting each minibatch into two halves of size 16 each, so that for every pair of images belonging to the same class, one image is assigned to the first half-minibatch, and the other to the second. Each half is then more i.i.d., and this achieves a much better test accuracy ($77.4\%$ at 140k steps), but still below the baseline. This method is only applicable when the number of examples per label is small (since this determines the number of microbatches that a minibatch needs to be split into).
 
+对于批再规范化，我们简单的以大小为32的minibatch训练模型，模型在120k 步之后获得同样的测试精度$78.5\%$作为独立同分布的等效模型，而批规范化只有$67\%$的精度。通过用批再规范化取代批规范化，我们保证推断模型可以有效的区分单张图像。这已经完全消除了过度拟合的模型与偏见的标签分布图像集的影响。
 With Batch Renorm, we simply trained the model with minibatch size of 32. The model achieved the same test accuracy ($78.5\%$ at 120k steps) as the equivalent model on i.i.d. minibatches, vs. $67\%$ obtained with batchnorm. By replacing batchnorm with Batch Renorm, we ensured that the inference model can effectively classify individual images. This has completely eliminated the effect of overfitting the model to image sets with a biased label distribution.
 
 
