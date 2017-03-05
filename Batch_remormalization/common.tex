@@ -342,13 +342,20 @@ With Batch Renorm, we simply trained the model with minibatch size of 32. The mo
 
 
 \section{Conclusions}
-我们已经证明，批规范化虽然有效，但不适合小minibatch或者非独立同分布训练样本。我们假设这些缺点是由于在实际中，模型的激活反过来作为其他层的输入，梯度计算训练过程跟推断过程不同。我们提出了批再规范化，替代批规范化模型的输出计算在训练和推断阶段都只仅仅依赖于个别样本而不是整个的minibatch。
+我们指出，批规范化虽然有效，但不适合小minibatch或者非独立同分布训练样本。我们假设这些缺点是由于在实际中，模型的激活反过来作为其他层的输入，梯度计算训练过程跟推断过程不同。我们提出了批再规范化，替代批规范化模型的输出计算在训练和推断阶段都只仅仅依赖于个别样本而不是整个的minibatch。
+
 We have demonstrated that Batch Normalization, while effective, is not well suited to small or non-i.i.d. training minibatches. We hypothesized that these drawbacks are due to the fact that the activations in the model, which are in turn used by other layers as inputs, are computed differently during training than during inference. We address this with Batch Renormalization, which replaces batchnorm and ensures that the outputs computed by the model are dependent only on the individual examples and not the entire minibatch, during both training and inference.
-批再规范化对批规范化进行了每维纠正扩展，来保证训练网络和推断网络的激活匹配。这种修正期待是理想的。参数从minibatch中被计算但是被当做一个常数优化。不像批规范化，推断过程均值和方差不需要计算直到训练完成，批再规范化受益于让统计数据直接参与训练。与批规范化一样，批再规范化易于实现，训练和推断速度也一样，明显的改善了小minibatch和非独立同分布minibatch的训练。我们的方法有额外的超参数：移动平均的更新率$\Delta$，纠正限制时刻表$\dmax$, $\rmax$。对于这些超参数的影响更深入的调查是未来工作的一部分。
+
+批再规范化对批规范化进行了单维修正，来保证训练网络和推断网络的激活匹配。这种修正的期望是恒同变换；修正参数是从minibatch中计算出来的，但是在优化过程中被当做一个常数。在批规范化中，我们在训练完成之后才进行计算将在推断过程使用的均值和方差，而批再规范化的好处在在训练过程中就使用这些参数。
+批再规范化与批规范化一样易于实现，训练和推断速度也没有差别，但是却明显的改善了模型在小minibatch和非独立同分布minibatch上的训练效果。
+我们的方法需要引入额外的超参数：移动平均的更新率$\Delta$，修正参数的取值上限$\dmax$, $\rmax$。对于这些超参数的影响更深入的研究是未来工作的一部分。
+
 Batch Renormalization extends batchnorm with a per-dimension correction to ensure that the activations match between the training and inference networks. This correction is identity in expectation; its parameters are computed from the minibatch but are treated as constant by the optimizer. Unlike batchnorm, where the means and variances used during inference do not need to be computed until the training has completed, Batch Renormalization benefits from having these statistics directly participate in the training. Batch Renormalization is as easy to implement as batchnorm itself, runs at the same speed during both training and inference, and significantly improves training on small or non-i.i.d. minibatches. Our method does have extra hyperparameters: the update rate $\Delta$ for the moving averages, and the schedules for correction limits $\dmax$, $\rmax$. A more extensive investigation of the effect of these is a part of future work.
 
-批再规范化承诺会改善任何正常使用批规范化模型的性能。包括残差网络，另一个应用是生成式对抗网络，批规范化对于非确定性的引入被发现是个问题，而批再规范化可能提供了这个问题的一个解决方案。
+批再规范化可以改善任何正常使用批规范化模型的性能，包括残差网络\cite{resnet}。另一个应用是在生成式对抗网络中\cite{gan}，批规范化引入的非确定性被发现是个问题，而批再规范化有可能会为这个问题提供一个解决方案。
+
 Batch Renormalization offers a promise of improving the performance of any model that would normally use batchnorm. This includes Residual Networks \cite{resnet}. Another application is Generative Adversarial Networks \cite{gan}, where the non-determinism introduced by batchnorm has been found to be an issue, and Batch Renorm may provide a solution.
 
-最后，批再规范化可能对那些应用批规范化困难的应用有效，例如递归神经网络。批规范化要求每个时间戳独立正则化，而批再规范化让用同样的运行均值来规范化整个时间戳成为可能，然后使用所有时间戳来更新那些均值。这仍然是未来值得深入探索的一个领域。
+最后，批再规范化可能对那些应用批规范化困难的应用有效，例如递归网络。在这些情况种，批规范化要求每个时间戳独立正则化(难以做到)。而批再规范化令使用同一个移动平均来规范化所有时间戳，然后再使用所有时间戳来更新那些均值这种做法成为可能。但这仍然是未来值得深入探索的一个领域。
+
 Finally, Batch Renormalization may benefit applications where applying batch normalization has been difficult -- such as recurrent networks. There, batchnorm would require each timestep to be normalized independently, but Batch Renormalization may make it possible to use the same running averages to normalize all timesteps, and then update those averages using all timesteps. This remains one of the areas that warrants further exploration.
