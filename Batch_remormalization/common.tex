@@ -320,7 +320,7 @@ The validation accuracy of the batchnorm model is significantly lower than the b
     \begin{tabular}{@{}c@{}}
 \includegraphics[width=\columnwidth]{biased.eps}
 \end{tabular}
-    当在 non-i.i.d. minibatch 上训练时所得到的验证准确度，这是通过为 16 个（取自共 1000 个）随机标签中的每一个标签采样 2 张图像得到的。这种分布偏差不仅会导致测试的低准确度，也会导致在训练集上的低准确度，最后还会下降。这表明在这个特定的 minibatch 分布上出现了过拟合，这通过我们的改进得到了证实——当测试 minibatch 也是每个标签包含 2 张图像，并且批规范化在推理过程中使用了 minibatch 统计 µB、σB 时。如果批规范化被分别应用于一个训练 minibatch 的两半，使其中每一半都更 i.i.d.，那么它还会进一步提升。最后，通过使用批再规范化，我们可以仅通过正常的训练和评估就实现如我们在图 1 中的 i.i.d. minibatch 上所得到的同样的验证准确度。
+    当在 non-i.i.d. minibatch 上训练时所得到的验证准确度，这是通过为 16 个（取自共 1000 个）随机标签中的每一个标签采样 2 张图像得到的。这种分布偏差不仅会导致测试的低准确度，也会导致在训练集上的低准确度，最后还会下降。这表明在这个特定的 minibatch 分布上出现了过拟合，这通过我们的改进得到了证实——当测试 minibatch 也是每个标签包含 2 张图像，并且批规范化在推理过程中使用了 minibatch 统计 $\mu_\setB$, $\sigma_\setB$ 时。如果批规范化被分别应用于一个训练 minibatch 的两半，使其中每一半都更 i.i.d.，那么它还会进一步提升。最后，通过使用批再规范化，我们可以仅通过正常的训练和评估就实现如我们在图 \ref{fig-baseline} 中的 i.i.d. minibatch 上所得到的同样的验证准确度。
     \caption{\em Validation accuracy when training on non-i.i.d. minibatches, obtained by sampling 2 images for each of 16 (out of total 1000) random labels. This distribution bias results not only in a low test accuracy, but also low accuracy on the training set, with an eventual drop. This indicates overfitting to the particular minibatch distribution, which is confirmed by the improvement when the test minibatches also contain 2 images per label, and batchnorm uses minibatch statistics $\mu_\setB$, $\sigma_\setB$ during inference. It improves further if batchnorm is applied separately to 2 halves of a training minibatch, making each of them more i.i.d. Finally, by using Batch Renorm, we are able to just train and evaluate normally, and achieve the same validation accuracy as we get for i.i.d. minibatches in Fig. \ref{fig-baseline}.
     }
     \label{fig-biased}
@@ -356,6 +356,6 @@ Batch Renormalization extends batchnorm with a per-dimension correction to ensur
 
 Batch Renormalization offers a promise of improving the performance of any model that would normally use batchnorm. This includes Residual Networks \cite{resnet}. Another application is Generative Adversarial Networks \cite{gan}, where the non-determinism introduced by batchnorm has been found to be an issue, and Batch Renorm may provide a solution.
 
-最后，批再规范化可能对那些应用批规范化困难的应用有效，例如递归网络。在这些情况种，批规范化要求每个时间戳独立正则化(难以做到)。而批再规范化令使用同一个移动平均来规范化所有时间戳，然后再使用所有时间戳来更新那些均值这种做法成为可能。但这仍然是未来值得深入探索的一个领域。
+最后，批再规范化可能对那些应用批规范化困难的应用有效，例如递归网络。在这些情况种，批规范化要求每个时间戳独立正则化(难以做到)。而批再规范化令使如下做法成为可能：用同一个移动平均来规范化所有时间戳，然后再使用所有时间戳来更新那些均值。但这仍然是未来值得深入探索的一个领域。
 
 Finally, Batch Renormalization may benefit applications where applying batch normalization has been difficult -- such as recurrent networks. There, batchnorm would require each timestep to be normalized independently, but Batch Renormalization may make it possible to use the same running averages to normalize all timesteps, and then update those averages using all timesteps. This remains one of the areas that warrants further exploration.
