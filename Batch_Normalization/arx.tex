@@ -107,7 +107,7 @@ $$\frac{1}{m} \jac{ \ell(\vx_i, \Theta)}{ \Theta}.$$
 
 由于层需要不断地适应新的分布，层输入的分布的变化提出了一个问题。当一个学习系统的输入分布改变时，也就认为经历了{\em 协变量移位}\cite{covariate-shift}，这个通常通过域适应（domainadaptation）\cite{domain-adaptation-survey}来处理。
 但是，协变量移位的概念可以作为一个整体延伸超出学习系统，适用于他自身的部分，比如子网络或者一个层。
-考虑一个计算如下损失函数的网络:$$\ell = F_2(F_1(\vu, \Theta_1), \Theta_2)$$ 其中
+设想一个计算如下损失函数的网络:$$\ell = F_2(F_1(\vu, \Theta_1), \Theta_2)$$ 其中
 $F_1$ 和 $F_2$ 可以是任意变换, 网络通过训练参数
 $\Theta_1, \Theta_2$ 来最小化损失函数 $\ell$.
 对 $\Theta_2$ 的学习可以被看做以
