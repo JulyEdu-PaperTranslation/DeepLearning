@@ -49,3 +49,4 @@
 
 **[更多文章](#deep-learning-papers)**
 
+### [An overview of gradient descent optimization algorithms](https://arxiv.org/abs/1609.04747)
