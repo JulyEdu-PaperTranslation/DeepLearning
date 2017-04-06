@@ -49,4 +49,14 @@
 
 **[更多文章](#deep-learning-papers)**
 
-### [An overview of gradient descent optimization algorithms](https://arxiv.org/abs/1609.04747)
+### [An overview of gradient descent optimization algorithms](https://github.com/JulyEdu-PaperTranslation/DeepLearning/tree/master/AnOverviewOfGradientDescentOptimizationAlgorithms)
+* **题目**: 
+* **翻译**：彭博(初)，管枫(复)，(审)
+* **绪论**：
+* **译者注**：
+ * **文章结构:**
+ * (1) 
+ * (2) 
+ * (3) 
+* **翻译全文下载**:()
+
