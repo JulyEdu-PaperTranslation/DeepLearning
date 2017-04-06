@@ -1,0 +1,138 @@
+\begin{thebibliography}{10}
+
+\bibitem{Abadi2015a}
+Martin Abadi, Ashish Agarwal, Paul Barham, Eugene Brevdo, Zhifeng Chen, Craig
+  Citro, Greg Corrado, Andy Davis, Jeffrey Dean, Matthieu Devin, Sanjay
+  Ghemawat, Ian Goodfellow, Andrew Harp, Geoffrey Irving, Michael Isard,
+  Yangqing Jia, Lukasz Kaiser, Manjunath Kudlur, Josh Levenberg, Dan Man, Rajat
+  Monga, Sherry Moore, Derek Murray, Jon Shlens, Benoit Steiner, Ilya
+  Sutskever, Paul Tucker, Vincent Vanhoucke, Vijay Vasudevan, Oriol Vinyals,
+  Pete Warden, Martin Wicke, Yuan Yu, and Xiaoqiang Zheng.
+\newblock {TensorFlow : Large-Scale Machine Learning on Heterogeneous
+  Distributed Systems}.
+\newblock 2015.
+
+\bibitem{Bengio2012a}
+Yoshua Bengio, Nicolas Boulanger-Lewandowski, and Razvan Pascanu.
+\newblock {Advances in Optimizing Recurrent Networks}.
+\newblock 2012.
+
+\bibitem{Bengio2009a}
+Yoshua Bengio, J{\'{e}}r{\^{o}}me Louradour, Ronan Collobert, and Jason Weston.
+\newblock {Curriculum learning}.
+\newblock {\em Proceedings of the 26th annual international conference on
+  machine learning}, pages 41--48, 2009.
+
+\bibitem{Darken1992}
+C.~Darken, J.~Chang, and J.~Moody.
+\newblock {Learning rate schedules for faster stochastic gradient search}.
+\newblock {\em Neural Networks for Signal Processing II Proceedings of the 1992
+  IEEE Workshop}, (September):1--11, 1992.
+
+\bibitem{Dauphin2014}
+Yann~N. Dauphin, Razvan Pascanu, Caglar Gulcehre, Kyunghyun Cho, Surya Ganguli,
+  and Yoshua Bengio.
+\newblock {Identifying and attacking the saddle point problem in
+  high-dimensional non-convex optimization}.
+\newblock {\em arXiv}, pages 1--14, 2014.
+
+\bibitem{Dean2012}
+Jeffrey Dean, Greg~S. Corrado, Rajat Monga, Kai Chen, Matthieu Devin, Quoc~V.
+  Le, Mark~Z. Mao, Marc~Aurelio Ranzato, Andrew Senior, Paul Tucker, Ke~Yang,
+  and Andrew~Y. Ng.
+\newblock {Large Scale Distributed Deep Networks}.
+\newblock {\em NIPS 2012: Neural Information Processing Systems}, pages 1--11,
+  2012.
+
+\bibitem{Duchi2011}
+John Duchi, Elad Hazan, and Yoram Singer.
+\newblock {Adaptive Subgradient Methods for Online Learning and Stochastic
+  Optimization}.
+\newblock {\em Journal of Machine Learning Research}, 12:2121--2159, 2011.
+
+\bibitem{Ioffe2015a}
+Sergey Ioffe and Christian Szegedy.
+\newblock {Batch Normalization: Accelerating Deep Network Training by Reducing
+  Internal Covariate Shift}.
+\newblock {\em arXiv preprint arXiv:1502.03167v3}, 2015.
+
+\bibitem{Kingma2015}
+Diederik~P. Kingma and Jimmy~Lei Ba.
+\newblock {Adam: a Method for Stochastic Optimization}.
+\newblock {\em International Conference on Learning Representations}, pages
+  1--13, 2015.
+
+\bibitem{LeCun1998}
+Yann LeCun, Leon Bottou, Genevieve~B. Orr, and Klaus~Robert M{\"{u}}ller.
+\newblock {Efficient BackProp}.
+\newblock {\em Neural Networks: Tricks of the Trade}, 1524:9--50, 1998.
+
+\bibitem{Mcmahan2014}
+H.~Brendan Mcmahan and Matthew Streeter.
+\newblock {Delay-Tolerant Algorithms for Asynchronous Distributed Online
+  Learning}.
+\newblock {\em Advances in Neural Information Processing Systems (Proceedings
+  of NIPS)}, pages 1--9, 2014.
+
+\bibitem{Neelakantan2015}
+Arvind Neelakantan, Luke Vilnis, Quoc~V. Le, Ilya Sutskever, Lukasz Kaiser,
+  Karol Kurach, and James Martens.
+\newblock {Adding Gradient Noise Improves Learning for Very Deep Networks}.
+\newblock pages 1--11, 2015.
+
+\bibitem{Nesterov}
+Yurii Nesterov.
+\newblock {A method for unconstrained convex minimization problem with the rate
+  of convergence o(1/k2)}.
+\newblock {\em Doklady ANSSSR (translated as Soviet.Math.Docl.)}, 269:543--547.
+
+\bibitem{Niu2011}
+Feng Niu, Benjamin Recht, R~Christopher, and Stephen~J Wright.
+\newblock {Hogwild!: A Lock-Free Approach to Parallelizing Stochastic Gradient
+  Descent}.
+\newblock pages 1--22, 2011.
+
+\bibitem{Pennington2014}
+Jeffrey Pennington, Richard Socher, and Christopher~D. Manning.
+\newblock {Glove: Global Vectors for Word Representation}.
+\newblock {\em Proceedings of the 2014 Conference on Empirical Methods in
+  Natural Language Processing}, pages 1532--1543, 2014.
+
+\bibitem{Qian1999}
+Ning Qian.
+\newblock {On the momentum term in gradient descent learning algorithms.}
+\newblock {\em Neural networks : the official journal of the International
+  Neural Network Society}, 12(1):145--151, 1999.
+
+\bibitem{Robbins1951}
+Herbert Robbins and Sutton Monro.
+\newblock {A Stochastic Approximation Method}.
+\newblock {\em The Annals of Mathematical Statistics}, 22(3):400--407, 1951.
+
+\bibitem{Sutskever2013a}
+Ilya Sutskever.
+\newblock {Training Recurrent neural Networks}.
+\newblock {\em PhD thesis}, page 101, 2013.
+
+\bibitem{Sutton1986}
+Richard~S Sutton.
+\newblock {Two problems with backpropagation and other steepest-descent
+  learning procedures for networks}, 1986.
+
+\bibitem{Zaremba2014a}
+Wojciech Zaremba and Ilya Sutskever.
+\newblock {Learning to Execute}.
+\newblock pages 1--25, 2014.
+
+\bibitem{Zeiler2012}
+Matthew~D. Zeiler.
+\newblock {ADADELTA: An Adaptive Learning Rate Method}.
+\newblock {\em arXiv preprint arXiv:1212.5701}, 2012.
+
+\bibitem{Zhang2014}
+Sixin Zhang, Anna Choromanska, and Yann LeCun.
+\newblock {Deep learning with Elastic Averaging SGD}.
+\newblock {\em Neural Information Processing Systems Conference (NIPS 2015)},
+  pages 1--24, 2015.
+
+\end{thebibliography}
