@@ -110,7 +110,11 @@ Vanilla梯度下降,又称为批梯度下降,在整个数据集上计算损失�
 
 As we need to calculate the gradients for the whole dataset to perform just \emph{one} update, batch gradient descent can be very slow and is intractable for datasets that do not fit in memory. Batch gradient descent also does not allow us to update our model \emph{online}, i.e. with new examples on-the-fly.
 
+由于在批梯度下降中为了执行一次更新,我们需要在整个数据集上计算梯度,因此这将会是很慢的,并且内存也是一个棘手的问题.批梯度下降同样也不适用于在线更新我们的模型,例如使用新的样例on-the-fly.
+
 In code, batch gradient descent looks something like this:
+
+在代码中,批梯度下降形如此:
 
 \begin{lstlisting}[language=python]
 for i in range(nb_epochs):
