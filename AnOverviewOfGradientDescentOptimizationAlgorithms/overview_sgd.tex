@@ -64,7 +64,7 @@ showstringspaces=false
   Insight Centre for Data Analytics, NUI Galway\\
   Aylien Ltd., Dublin\\
   \texttt{ruder.sebastian@gmail.com}、、
-  翻译:管枫(初)，蓬博(复)，zhangdotcn(审)
+  翻译:管枫(初)，彭博(复)，zhangdotcn(审)
 }
 
 \begin{document}
@@ -74,18 +74,18 @@ showstringspaces=false
 \begin{abstract}
 Gradient descent optimization algorithms, while increasingly popular, are often used as black-box optimizers, as practical explanations of their strengths and weaknesses are hard to come by. This article aims to provide the reader with intuitions with regard to the behaviour of different algorithms that will allow her to put them to use. In the course of this overview, we look at different variants of gradient descent, summarize challenges, introduce the most common optimization algorithms, review architectures in a parallel and distributed setting, and investigate additional strategies for optimizing gradient descent.
 
-梯度下降类算法在优化问题中非常流行，但是因为难以简单的对众多梯度下降类算法给出一个实用的优劣分析，所以在实际应用中这类算法常常被当作黑箱算法来使用。本文的目的是为读者介绍这一类算法中不同变种的直观解释，并希望读者能够在实际问题中更合理的选择和使用梯度下降类算法。在这个概述中，对于梯度下降类算法我们考察其分类，总结其面临的挑战，介绍几种常用的具体算法，简单介绍并行与分布式架构，并探索其他一些梯度下降类优化策略。
+梯度下降类算法在优化问题中非常流行，但是因为难以简单的对众多梯度下降类算法给出一个实用的优劣分析，所以在实际应用中这类算法常常被当作黑箱算法来使用。本文的目的是为读者提供不同算法效果的直观展示，并希望读者能够在实际问题中更合理的选择和使用梯度下降类算法。在这个概述中，我们考察梯度下降算法的不同类型，总结其面临的挑战，介绍几种常用的具体算法，简单介绍并行与分布式架构，并探索其他一些梯度下降类优化策略。
 \end{abstract}
 
 \section{Introduction}
 
 Gradient descent is one of the most popular algorithms to perform optimization and by far the most common way to optimize neural networks. At the same time, every state-of-the-art Deep Learning library contains implementations of various algorithms to optimize gradient descent (e.g. lasagne's\footnote{\url{http://lasagne.readthedocs.org/en/latest/modules/updates.html}}, caffe's\footnote{\url{http://caffe.berkeleyvision.org/tutorial/solver.html}}, and keras'\footnote{\url{http://keras.io/optimizers/}} documentation). These algorithms, however, are often used as black-box optimizers, as practical explanations of their strengths and weaknesses are hard to come by.
 
-梯度下降作为最流行的优化算法之一，目前也是神经网络问题中最常用的优化方法。同时每一个最先进的深度学习库里都包含各种算法来优化梯度下降法(比如:lasagne\footnote{\url{http://lasagne.readthedocs.org/en/latest/modules/updates.html}}, caffe\footnote{\url{http://caffe.berkeleyvision.org/tutorial/solver.html}}, and keras\footnote{\url{http://keras.io/optimizers/}} documentation).然而因为难以简单的比较其优缺点，这些算法通常被当作黑箱算法来使用。
+梯度下降作为最流行的优化算法之一，目前也是神经网络问题中最常用的优化方法。同时每一个最先进的深度学习库里都包含各种算法来优化梯度下降法(比如:lasagne\footnote{\url{http://lasagne.readthedocs.org/en/latest/modules/updates.html}}, caffe\footnote{\url{http://caffe.berkeleyvision.org/tutorial/solver.html}}, and keras\footnote{\url{http://keras.io/optimizers/}} documentation).然而难以合理的解释其优缺点，这些算法通常被当作黑箱算法来使用。
 
 This article aims at providing the reader with intuitions with regard to the behaviour of different algorithms for optimizing gradient descent that will help her put them to use. In Section \ref{sec:gradient_descent_variants}, we are first going to look at the different variants of gradient descent. We will then briefly summarize challenges during training in Section \ref{sec:challenges}. Subsequently, in Section \ref{sec:algos}, we will introduce the most common optimization algorithms by showing their motivation to resolve these challenges and how this leads to the derivation of their update rules. Afterwards, in Section \ref{sec:parallelizing}, we will take a short look at algorithms and architectures to optimize gradient descent in a parallel and distributed setting. Finally, we will consider additional strategies that are helpful for optimizing gradient descent in Section \ref{sec:strategies}.
 
-本文的目的是为读者介绍这一类算法中不同变种的直观解释，并希望读者能够在实际问题中更合理的选择和使用梯度下降类算法。第\ref{sec:gradient_descent_variants}节，我们首先考察一下梯度下降算法的几种类型。然后在第\ref{sec:challenges}节中简单总结在使用中容易遇到的问题。接下来在第\ref{sec:algos}节中，我们介绍最常用的几种算法的动机以及其数学实现，并在第\ref{sec:parallelizing}节中简单看一下如何使用并行与分布计算的架构来优化梯度下降算法。最后在第\ref{sec:strategies}节中，我们介绍其他一些可以用来优化梯度下降类算法的策略。
+本文的目的是提供给读者一些用来优化梯度下降的不同算法的效果的直观展示，并希望能够帮助读者在实际问题中更合理的选择和使用梯度下降类算法。第\ref{sec:gradient_descent_variants}节，我们首先考察一下梯度下降算法的几种类型。然后在第\ref{sec:challenges}节中简单总结在使用中容易遇到的问题。接下来在第\ref{sec:algos}节中，我们介绍最常用的几种算法的动机以及其数学实现，并在第\ref{sec:parallelizing}节中简单看一下在并行和分布式环境中,这些算法和框架是如何来优化梯度下降算法的。最后在第\ref{sec:strategies}节中，我们介绍其他一些可以用来优化梯度下降类算法的策略。
 
 Gradient descent is a way to minimize an objective function $J(\theta)$ parameterized by a model's parameters $\theta \in \mathbb{R}^d$ by updating the parameters in the opposite direction of the gradient of the objective function $\nabla_\theta J(\theta)$ w.r.t. to the parameters. The learning rate $\eta$ determines the size of the steps we take to reach a (local) minimum. In other words, we follow the direction of the slope of the surface created by the objective function downhill until we reach a valley.\footnote{If you are unfamiliar with gradient descent, you can find a good introduction on optimizing neural networks at \url{http://cs231n.github.io/optimization-1/}.}
 
@@ -96,9 +96,13 @@ Gradient descent is a way to minimize an objective function $J(\theta)$ paramete
 
 There are three variants of gradient descent, which differ in how much data we use to compute the gradient of the objective function. Depending on the amount of data, we make a trade-off between the accuracy of the parameter update and the time it takes to perform an update.
 
+针对于在计算目标函数梯度时所使用数据量的不同,分为三种梯度下降的类型.我们在参数更新的准确率和执行更新所消耗的时间之间进行权衡.
+
 \subsection{Batch gradient descent}
 
 Vanilla gradient descent, aka batch gradient descent, computes the gradient of the cost function w.r.t. to the parameters $\theta$ for the entire training dataset:
+
+Vanilla梯度下降,又称为批梯度下降,在整个数据集上计算损失函数关于参数$\theta$的梯度:
 
 \begin{equation}
 \theta = \theta - \eta \cdot \nabla_\theta J( \theta)
@@ -106,7 +110,11 @@ Vanilla gradient descent, aka batch gradient descent, computes the gradient of t
 
 As we need to calculate the gradients for the whole dataset to perform just \emph{one} update, batch gradient descent can be very slow and is intractable for datasets that do not fit in memory. Batch gradient descent also does not allow us to update our model \emph{online}, i.e. with new examples on-the-fly.
 
+由于在批梯度下降中为了执行一次更新,我们需要在整个数据集上计算梯度,因此这将会是很慢的,并且内存也是一个棘手的问题.批梯度下降同样也不适用于在线更新我们的模型,例如使用新的样例on-the-fly.
+
 In code, batch gradient descent looks something like this:
+
+在代码中,批梯度下降形如此:
 
 \begin{lstlisting}[language=python]
 for i in range(nb_epochs):
