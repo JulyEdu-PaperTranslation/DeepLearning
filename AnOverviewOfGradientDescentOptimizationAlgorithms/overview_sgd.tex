@@ -96,13 +96,13 @@ Gradient descent is a way to minimize an objective function $J(\theta)$ paramete
 
 There are three variants of gradient descent, which differ in how much data we use to compute the gradient of the objective function. Depending on the amount of data, we make a trade-off between the accuracy of the parameter update and the time it takes to perform an update.
 
-针对于在计算目标函数梯度时所使用数据量的不同,分为三种梯度下降的类型.我们在参数更新的准确率和执行更新所消耗的时间之间进行权衡.
+针对于在计算目标函数梯度时所使用数据量的不同,梯度下降分为三种类型.具体操作时，我们在参数更新的准确率和执行更新所消耗的时间之间进行权衡，来选用最合适的类型。
 
 \subsection{Batch gradient descent}
 
 Vanilla gradient descent, aka batch gradient descent, computes the gradient of the cost function w.r.t. to the parameters $\theta$ for the entire training dataset:
 
-Vanilla梯度下降,又称为批梯度下降,在整个数据集上计算损失函数关于参数$\theta$的梯度:
+普通(vanilla)梯度下降,又称为批梯度下降,在整个数据集上计算损失函数关于参数$\theta$的梯度:
 
 \begin{equation}
 \theta = \theta - \eta \cdot \nabla_\theta J( \theta)
