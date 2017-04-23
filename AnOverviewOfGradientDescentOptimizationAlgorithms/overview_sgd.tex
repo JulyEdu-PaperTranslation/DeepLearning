@@ -203,14 +203,17 @@ for i in range(nb_epochs):
 
 Vanilla mini-batch gradient descent, however, does not guarantee good convergence, but offers a few challenges that need to be addressed:
 
+然而普通的小批量梯度下降法的收敛性仍然不太好，而且有如下的一些问题需要解决:
+
 \begin{itemize}
 \item Choosing a proper learning rate can be difficult. A learning rate that is too small leads to painfully slow convergence, while a learning rate that is too large can hinder convergence and cause the loss function to fluctuate around the minimum or even to diverge.
-
+\item 很难选取一个合适的学习率。过小的学习率使得收敛极其缓慢，而过大的学习率会使损失函数在极小值附近剧烈震荡，甚至导致发散。
 \item Learning rate schedules \cite{Robbins1951} try to adjust the learning rate during training by e.g. annealing, i.e. reducing the learning rate according to a pre-defined schedule or when the change in objective between epochs falls below a threshold. These schedules and thresholds, however, have to be defined in advance and are thus unable to adapt to a dataset's characteristics \cite{Darken1992}.
-
+\item 预定学习率衰减\cite{Robbins1951}的方法可以在训练过程中调整学习率，比如按照一开始定义好的计划逐渐削减学习率或者当相邻的两次迭代中目标函数的变化小于某一个阈值时减小学习率。但是这些计划和阈值都必须要在训练前就定义好，所以无法达到为训练样本量身定做的效果。
 \item Additionally, the same learning rate applies to all parameter updates. If our data is sparse and our features have very different frequencies, we might not want to update all of them to the same extent, but perform a larger update for rarely occurring features.
-
+\item 另外，所有的参数更新都使用了同样的学习率。如果数据具有稀疏性而且不同的特征出现的频率有很大差异时，我们更希望对那些极少出现的特征使用较大的学习率，而不是对大家一视同仁。
 \item Another key challenge of minimizing highly non-convex error functions common for neural networks is avoiding getting trapped in their numerous suboptimal local minima. Dauphin et al. \cite{Dauphin2014} argue that the difficulty arises in fact not from local minima but from saddle points, i.e. points where one dimension slopes up and another slopes down. These saddle points are usually surrounded by a plateau of the same error, which makes it notoriously hard for SGD to escape, as the gradient is close to zero in all dimensions.
+\item 另一个重要的问题是在神经网络的训练中，经常会遇到极为非凸的目标函数，此时很难避免参数被困在一些次优的局部极小值附近。Dauphin et al. \cite{Dauphin2014} 提出这类问题主要发生在鞍点附近。这些鞍点经常环绕着一些平原区域，而在这些区域中，损失函数的梯度很接近于零，所以SGD很难从中逃脱。
 \end{itemize}
 
 \section{Gradient descent optimization algorithms} \label{sec:algos}
