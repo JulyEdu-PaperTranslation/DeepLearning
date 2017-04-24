@@ -216,13 +216,19 @@ Vanilla mini-batch gradient descent, however, does not guarantee good convergenc
 \item 另一个重要的问题是在神经网络的训练中，经常会遇到极为非凸的目标函数，此时很难避免参数被困在一些次优的局部极小值附近。Dauphin et al. \cite{Dauphin2014} 提出这类问题主要发生在鞍点附近。这些鞍点经常环绕着一些平原区域，而在这些区域中，损失函数的梯度很接近于零，所以SGD很难从中逃脱。
 \end{itemize}
 
-\section{Gradient descent optimization algorithms} \label{sec:algos}
+%\section{Gradient descent optimization algorithms} \label{sec:algos}
+\section{随机梯度下降优化算法} \label{sec:algos}
 
 In the following, we will outline some algorithms that are widely used by the Deep Learning community to deal with the aforementioned challenges. We will not discuss algorithms that are infeasible to compute in practice for high-dimensional data sets, e.g. second-order methods such as Newton's method\footnote{\url{https://en.wikipedia.org/wiki/Newton\%27s_method_in_optimization}}.
 
-\subsection{Momentum}
+下面我们介绍一些优化梯度下降算法，他们经常在深度学习中被用来处理上节所提到的问题和挑战。在此我们不讨论那些不适用于高维数据的方法，比如类似于牛顿法\footnote{\url{https://en.wikipedia.org/wiki/Newton\%27s_method_in_optimization}}的二阶算法。
+
+%\subsection{Momentum}
+\subsection{动量法}
 
 SGD has trouble navigating ravines, i.e. areas where the surface curves much more steeply in one dimension than in another \cite{Sutton1986}, which are common around local optima. In these scenarios, SGD oscillates across the slopes of the ravine while only making hesitant progress along the bottom towards the local optimum as in Figure \ref{fig:sgd_without_momentum}.
+
+SGD 那种在一个方向上很陡峭而在其他方向上比较平坦，形如峡谷的函数上表现差强人意\cite{Sutton1986}，而这种形状在局部极值附近却比较常见。在这种情况下，SGD经常如下图所描述的那样，在峡谷的两边震荡而不能顺利的沿着峡谷方向直接前往最优点。
 
 \begin{figure}[!htb]
     \centering
@@ -243,6 +249,8 @@ SGD has trouble navigating ravines, i.e. areas where the surface curves much mor
 
 Momentum \cite{Qian1999} is a method that helps accelerate SGD in the relevant direction and dampens oscillations as can be seen in Figure \ref{fig:sgd_with_momentum}. It does this by adding a fraction $\gamma$ of the update vector of the past time step to the current update vector\footnote{Some implementations exchange the signs in the equations.}
 
+如图\ref{fig:sgd_with_momentum}所示，动量法\cite{Qian1999}可以通过消减这种无谓的震动来加速SGD。动量法的基本原理是在当前的参数更新向量上添加之前一次参数更新向量的一部分\footnote{有些算法实现中会采取不同的符号.}。
+
 \begin{align}
 \begin{split}
 v_t &= \gamma v_{t-1} + \eta \nabla_\theta J( \theta)\\
@@ -252,7 +260,11 @@ v_t &= \gamma v_{t-1} + \eta \nabla_\theta J( \theta)\\
 
 The momentum term $\gamma$ is usually set to $0.9$ or a similar value.
 
+动量项$\gamma$通常被定在$0.9$左右。
+
 Essentially, when using momentum, we push a ball down a hill. The ball accumulates momentum as it rolls downhill, becoming faster and faster on the way (until it reaches its terminal velocity, if there is air resistance, i.e. $\gamma < 1$). The same thing happens to our parameter updates: The momentum term increases for dimensions whose gradients point in the same directions and reduces updates for dimensions whose gradients change directions. As a result, we gain faster convergence and reduced oscillation.
+
+动量法本质上就像是从山顶推一个球下山。球在向下滚动的过程中积累动量速度越来越快(如果存在空气阻力时，也就是$\gamma < 1$的情况，最终会达到平衡速度)。我们的参数更新也是同样的情况: 动量项在那些梯度符号比较一致的方向上不断积累，而在那些梯度经常改变符号的方向上相互抵销，这帮助我们降低震荡从而加快迭代收敛速度。
 
 \subsection{Nesterov accelerated gradient}
 
