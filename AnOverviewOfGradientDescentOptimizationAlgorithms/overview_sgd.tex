@@ -125,7 +125,7 @@ for i in range(nb_epochs):
 
 For a pre-defined number of epochs,  we first compute the gradient vector \lstinline{params_grad} of the loss function for the whole dataset w.r.t. our parameter vector \lstinline{params}.  Note that state-of-the-art deep learning libraries provide automatic differentiation that efficiently computes the gradient w.r.t. some parameters. If you derive the gradients yourself, then gradient checking is a good idea.\footnote{Refer to \url{http://cs231n.github.io/neural-networks-3/} for some great tips on how to check gradients properly.}
 
-对于预先确定的迭代次数\lstinline{nb_epochs}，在每一次迭代中，我们首先计算损失函数关于模型参数向量\lstinline{params}的梯度\lstinline{params_grad}. 最先进的深度学习代码库都会提供计算梯度的工具，但是如果使用者使用自己的梯度计算工具的话，最好使用梯度检查\footnote{梯度检查请参考 \url{http://cs231n.github.io/neural-networks-3/}}确保不会出错。
+对于预先确定的迭代次数\lstinline{nb_epochs}，在每一次迭代中，我们首先在整个数据集上计算损失函数关于模型参数向量\lstinline{params}的梯度\lstinline{params_grad}. 最先进的深度学习代码库都会提供计算梯度的工具，但是如果使用者使用自己的梯度计算工具的话，最好使用梯度检查\footnote{梯度检查请参考 \url{http://cs231n.github.io/neural-networks-3/}}确保不会出错。
 
 We then update our parameters in the direction of the gradients with the learning rate determining how big of an update we perform. Batch gradient descent is guaranteed to converge to the global minimum for convex error surfaces and to a local minimum for non-convex surfaces.
 
@@ -144,7 +144,7 @@ Stochastic gradient descent (SGD) in contrast performs a parameter update for \e
 
 Batch gradient descent performs redundant computations for large datasets, as it recomputes gradients for similar examples before each parameter update. SGD does away with this redundancy by performing one update at a time. It is therefore usually much faster and can also be used to learn online.
 
-在样本数量极大的时候，批梯度下降法在每一次参数跟新前，要对大量相似的样本计算其损失函数的梯度，这造成很多冗余的计算。SGD 有效避免了这种冗余，所以他通常比较快，而且适用于样本的在线更新(对于在线添加的样本，可以方便的直接带入迭代之中)
+在样本数量极大的时候，批梯度下降法在每一次参数更新前，要对大量相似的样本计算其损失函数的梯度，这造成很多冗余的计算。SGD 有效避免了这种冗余，所以他通常比较快，而且适用于样本的在线更新(对于在线添加的样本，可以方便的直接带入迭代之中)
 
 SGD performs frequent updates with a high variance that cause the objective function to fluctuate heavily as in Figure \ref{fig:sgd_fluctuation}.
 
@@ -161,7 +161,7 @@ https://upload.wikimedia.org/wikipedia/commons/f/f3/Stogra.png}{Wikipedia})}
 While batch gradient descent converges to the minimum of the basin the parameters are placed in, SGD's fluctuation, on the one hand, enables it to jump to new and potentially better local minima. On the other hand, this ultimately complicates convergence to the exact minimum, as SGD will keep overshooting. However, it has been shown that when we slowly decrease the learning rate, SGD shows the same convergence behaviour as batch gradient descent, almost certainly converging to a local or the global minimum for non-convex and convex optimization respectively.
 Its code fragment simply adds a loop over the training examples and evaluates the gradient w.r.t. each example. Note that we shuffle the training data at every epoch as explained in Section \ref{sec:shuffling}.
 
-相对比于批梯度下降法在参数空间中收敛于局部最小值的的表现来说，SGD的高震荡性，一方面使迭代有可能跳出当前的局部最小值并找到更好的局部最小值，另一方面却因为过于活跃而使得收敛变得异常困难。但是，已知的结果显示，只要在迭代中逐渐缩小学习率，那么SGD也会展现出和批梯度下降法类似的收敛效果，并在凸函数和非凸函数的情形下分别收敛于整体及小值和局部极小值。下面的代码中，我们只要在批梯度下降法的每一次迭代中加入一层对于每一个样本的参数更新迭代就得到了SGD的代码。请注意我们在每一个外层迭代开始时对样本顺序进行了重新洗牌，关于这种技巧我们在第\ref{sec:shuffling}节进行详细介绍。
+相对比于批梯度下降法在参数空间中收敛于局部最小值的的表现来说，SGD的高震荡性，一方面使迭代有可能跳出当前的局部最小值并找到更好的局部最小值，另一方面却因为过于活跃而使得收敛变得异常困难。但是，已知的结果显示，只要在迭代中逐渐缩小学习率，那么SGD也会展现出和批梯度下降法类似的收敛效果——分别在凸函数和非凸函数的情形下收敛于整体极小值和局部极小值。在代码上，仅仅是关于训练样本增加了一个子循环来计算关于每一个样本的梯度。请注意我们在每一个外层迭代开始时随机打乱了样本顺序，关于这种技巧我们在第\ref{sec:shuffling}节进行详细介绍。
 
 \begin{lstlisting}[language=python]
 for i in range(nb_epochs):
