@@ -270,7 +270,11 @@ Essentially, when using momentum, we push a ball down a hill. The ball accumulat
 
 However, a ball that rolls down a hill, blindly following the slope, is highly unsatisfactory. We would like to have a smarter ball, a ball that has a notion of where it is going so that it knows to slow down before the hill slopes up again.
 
+但是一个从山顶滚下越滚越快的球并不能满足我们的需求，我们希望这个球更加聪明一些，使得他在到达底部并再次上升之前就开始自动减速。
+
 Nesterov accelerated gradient (NAG) \cite{Nesterov} is a way to give our momentum term this kind of prescience. We know that we will use our momentum term $\gamma \: v_{t-1}$ to move the parameters $\theta$. Computing $\theta - \gamma \: v_{t-1}$ thus gives us an approximation of the next position of the parameters (the gradient is missing for the full update), a rough idea where our parameters are going to be. We can now effectively look ahead by calculating the gradient not w.r.t. to our current parameters $\theta$ but w.r.t. the approximate future position of our parameters:
+
+Nesterov accelerated gradient (NAG) \cite{Nesterov} 就可以赋予我们的动量项这样的先见之明。因为我们知道在第$t$次更新中将会用到动量项$\gamma \: v_{t-1}$, 所以$\theta - \gamma \: v_{t-1}$就给出了参数向量下一个位置的粗略估计。所以我们与其在$\theta$处计算梯度，还不如在这个粗略估计的下一个位置计算梯度。
 
 \begin{align}
 \begin{split}
@@ -281,7 +285,11 @@ v_t &= \gamma \: v_{t-1} + \eta \nabla_\theta J( \theta - \gamma v_{t-1})\\
 
 Again, we set the momentum term $\gamma$ to a value of around $0.9$. While Momentum first computes the current gradient (small blue vector in Figure \ref{fig:nesterov update}) and then takes a big jump in the direction of the updated accumulated gradient (big blue vector), NAG first makes a big jump in the direction of the previous accumulated gradient (brown vector), measures the gradient and then makes a correction (green vector). This anticipatory update prevents us from going too fast and results in increased responsiveness, which has significantly increased the performance of RNNs on a number of tasks \cite{Bengio2012a}.\footnote{Refer to \url{http://cs231n.github.io/neural-networks-3/} for another explanation of the intuitions behind NAG, while Ilya Sutskever gives a more detailed overview in his PhD thesis \cite{Sutskever2013a}.}
 
+我们仍然把$\gamma$定为 $0.9$左右。普通的动量法先计算当前的梯度(图\ref{fig:nesterov update}中的小蓝向量)，然后沿着累积梯度方向做一个大幅度的参数更新(图中的大蓝向量)。NAG 首先在前一次的累积梯度方向做一个大幅更新(棕色向量)，然后再计算梯度，并进行修正(绿色向量)。这种有先见之明的更新方式，可以避免我们更新的幅度过大。这种方法在若干个例子中都显著提升了RNN网络的表现\cite{Bengio2012a}。\footnote{在文章\url{http://cs231n.github.io/neural-networks-3/}中描述了NAG的另一种解释, Ilya Sutskever 在他的博士论文中也给出了详细的介绍 \cite{Sutskever2013a}.}
+
 Now that we are able to adapt our updates to the slope of our error function and speed up SGD in turn, we would also like to adapt our updates to each individual parameter to perform larger or smaller updates depending on their importance.
+
+现在我们可以让我们的参数更新自动适应误差函数的斜率，并确实加速了SGD的收敛。但是另一方面，我们也希望能够让我们的参数更新适应每一个参数，根据他们各自的重要性来决定每一个更新的幅度大小。
 
 \begin{figure}
 	\centering
@@ -295,7 +303,11 @@ http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf}{G. Hint
 
 Adagrad \cite{Duchi2011} is an algorithm for gradient-based optimization that does just this: It adapts the learning rate to the parameters, performing larger updates for infrequent and smaller updates for frequent parameters. For this reason, it is well-suited for dealing with sparse data. Dean et al. \cite{Dean2012} have found that Adagrad greatly improved the robustness of SGD and used it for training large-scale neural nets at Google, which -- among other things -- learned to recognize cats in Youtube videos\footnote{\url{http://www.wired.com/2012/06/google-x-neural-network/}}. Moreover, Pennington et al. \cite{Pennington2014} used Adagrad to train GloVe word embeddings, as infrequent words require much larger updates than frequent ones.
 
+Adagrad \cite{Duchi2011} 正中下怀，他是一种可以根据参数的重要性来调整学习率的算法: 对于常常更新的参数使用较小的学习率，而对于很少得到更新的参数使用较大的学习率。所以这种方法很适合于稀疏性很强的数据集。 Dean et al. \cite{Dean2012} 发现Adarad 可以大大提升SGD的鲁棒性，于是将其应用于Google的大规模神经网络训练中，并和其他的算法一起实现了在YouTube视频中对猫的自动识别\footnote{\url{http://www.wired.com/2012/06/google-x-neural-network/}}。另外Pennington et al. \cite{Pennington2014}使用Adagrad 对GloVe 词语嵌入进行训练，因为在这种情况下不常出现的词语需要比经常出现的词语更大的学习率。
+
 Previously, we performed an update for all parameters $\theta$ at once as every parameter $\theta_i$ used the same learning rate $\eta$. As Adagrad uses a different learning rate for every parameter $\theta_i$ at every time step $t$, we first show Adagrad's per-parameter update, which we then vectorize. For brevity, we set $g_{t, i}$ to be the gradient of the objective function w.r.t. to the parameter $\theta_i$ at time step $t$:
+
+前面的方法中，我们每一次都用相同的学习率$\eta$对所有参数$\theta_i$进行同步更新。Adagrad 在每一次更新中都对不同的参数采取不同的学习率，我们首先单独考察每一个参数，然后再将其向量化。简单来说，我们用$g_{t, i}$表示目标函数在第$t$步迭代时，关于参数$\theta_i$的梯度。
 
 \begin{equation}
 g_{t, i} = \nabla_\theta J( \theta_i )
@@ -303,11 +315,15 @@ g_{t, i} = \nabla_\theta J( \theta_i )
 
 The SGD update for every parameter $\theta_i$ at each time step $t$ then becomes:
 
+SGD对于参数$\theta_i$在第$t$步的更新如下所示：
+
 \begin{equation}
 \theta_{t+1, i} = \theta_{t, i} - \eta \cdot g_{t, i}
 \end{equation}
 
 In its update rule, Adagrad modifies the general learning rate $\eta$ at each time step $t$ for every parameter $\theta_i$ based on the past gradients that have been computed for $\theta_i$:
+
+而Adagrad在每一次跟新时，都针对每一个参数$\theta_i$利用这个参数以往的方向导数值来动态调整其专属的$\eta$
 
 \begin{equation}
 \theta_{t+1, i} = \theta_{t, i} - \frac{\eta}{\sqrt{G_{t, ii} + \epsilon}} \cdot g_{t, i}
@@ -315,7 +331,11 @@ In its update rule, Adagrad modifies the general learning rate $\eta$ at each ti
 
 $G_{t} \in \mathbb{R}^{d \times d} $ here is a diagonal matrix where each diagonal element $i, i$ is the sum of the squares of the gradients w.r.t. $\theta_i$ up to time step $t$\footnote{Duchi et al. \cite{Duchi2011} give this matrix as an alternative to the \emph{full} matrix containing the outer products of all previous gradients, as the computation of the matrix square root is infeasible even for a moderate number of parameters $d$.}, while $\epsilon$ is a smoothing term that avoids division by zero (usually on the order of $1e-8$). Interestingly, without the square root operation, the algorithm performs much worse.
 
+此处$G_{t} \in \mathbb{R}^{d \times d} $是一个对角矩阵，其每一个对角元素$i, i$是在以往更新中到第$t$步为止，目标函数在$\theta_i$方向上的导数的平方和。\footnote{Duchi et al. \cite{Duchi2011} 使用这个对角矩阵取代了完整的以往参数更新的协方差矩阵，因为对整个高维矩阵进行开方运算不划算。}, 公式中的$\epsilon$是一个光滑化参数，用来避免分母为零的情况发生，$\epsilon$通常取值在$1e-8$量级上。有意思的是，如果去掉取平方根那一步，这个算法的表现就会立刻变差很多。
+
 As $G_{t}$ contains the sum of the squares of the past gradients w.r.t. to all parameters $\theta$ along its diagonal, we can now vectorize our implementation by performing an element-wise matrix-vector multiplication $\odot$ between $G_{t}$ and $g_{t}$:
+
+因为 $G_{t}$ 包含了所有参数的以往方向导数的平方和，我们可以很容易的写出这个算法的向量形式:
 
 \begin{equation}
 \theta_{t+1} = \theta_{t} - \frac{\eta}{\sqrt{G_{t} + \epsilon}} \odot g_{t}.
@@ -323,19 +343,29 @@ As $G_{t}$ contains the sum of the squares of the past gradients w.r.t. to all p
 
 One of Adagrad's main benefits is that it eliminates the need to manually tune the learning rate. Most implementations use a default value of $0.01$ and leave it at that.
 
+Adagrad方法的一个主要的好处是他不需要手动调整学习率。大部分算法实现就直接默认使用$0.01$。
+
 Adagrad's main weakness is its accumulation of the squared gradients in the denominator: Since every added term is positive, the accumulated sum keeps growing during training. This in turn causes the learning rate to shrink and eventually become infinitesimally small, at which point the algorithm is no longer able to acquire additional knowledge. The following algorithms aim to resolve this flaw.
+
+Adagrad 方法的主要弱点是它会在分母上不断累积梯度平方和:因为每次加入的都是正数，所以分母随着训练步骤增加不断变大。这就使得学习率不断衰减，直到接近无穷小，以至于参数更新无法继续前进。下面这个算法就是针对于此的一个改进。
 
 \subsection{Adadelta}
 
 Adadelta \cite{Zeiler2012} is an extension of Adagrad that seeks to reduce its aggressive, monotonically decreasing learning rate. Instead of accumulating all past squared gradients, Adadelta restricts the window of accumulated past gradients to some fixed size $w$.
 
+Adadelta \cite{Zeiler2012} 是针对Adagrad方法里面不断单调下降的学习率问题的一个改进版。Adadelta方法采用指数衰减移动平均的方式来取代Adagrad里面将以往全部梯度值都平等纳入平方和的做法。
+
 Instead of inefficiently storing $w$ previous squared gradients, the sum of gradients is recursively defined as a decaying average of all past squared gradients. The running average $E[g^2]_t$ at time step $t$ then depends (as a fraction $\gamma $ similarly to the Momentum term) only on the previous average and the current gradient:
+
+如果用$E[g^2]_t$表示在第$t$步时$g^2$的移动平均，那么我们采取如下迭代的方法对它进行更新. 
 
 \begin{equation}
 E[g^2]_t = \gamma E[g^2]_{t-1} + (1 - \gamma) g^2_t
 \end{equation}
 
 We set $\gamma$ to a similar value as the momentum term, around $0.9$. For clarity, we now rewrite our vanilla SGD update in terms of the parameter update vector $ \Delta \theta_t $:
+
+类似于动量法的做法，我们把 $\gamma$ 定义为$0.9$左右。现在我们使用$ \Delta \theta_t $来简化SGD的更新算法的表达:
 
 \begin{align}
 \begin{split}
@@ -346,17 +376,23 @@ We set $\gamma$ to a similar value as the momentum term, around $0.9$. For clari
 
 The parameter update vector of Adagrad that we derived previously thus takes the form:
 
+那么，前面介绍的Adagrad算法就如下形式:
+
 \begin{equation}
 \Delta \theta_t = - \frac{\eta}{\sqrt{G_{t} + \epsilon}} \odot g_{t}
 \end{equation}
 
 We now simply replace the diagonal matrix $G_{t}$ with the decaying average over past squared gradients $E[g^2]_t$:
 
+只要在Adagrad算法里面将$G_{t}$换成指数衰减移动平均$E[g^2]_t$，我们就得到了Adadelta 算法的更新法则:
+
 \begin{equation}
 \Delta \theta_t = - \frac{\eta}{\sqrt{E[g^2]_t + \epsilon}} g_{t}
 \end{equation}
 
 As the denominator is just the root mean squared (RMS) error criterion of the gradient, we can replace it with the criterion short-hand:
+
+因为分母是梯度的一个均方根(RMS)，我们可以将上面的算法简写为:
 
 \begin{equation}
 \Delta \theta_t = - \frac{\eta}{RMS[g]_{t}} g_t
