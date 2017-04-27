@@ -400,7 +400,7 @@ As the denominator is just the root mean squared (RMS) error criterion of the gr
 
 The authors note that the units in this update (as well as in SGD, Momentum, or Adagrad) do not match, i.e. the update should have the same hypothetical units as the parameter. To realize this, they first define another exponentially decaying average, this time not of squared gradients but of squared parameter updates:
 
-Adadelta 的作者们注意到参数更新值$\Delta\theta$的单位和参数$\theta$本身的单位不匹配(SGD，动量法，以及Adagrad也存在同样的问题)。为了解决这个问题，他们定义了参数更新值的平方的移动平均:
+Adadelta 的作者们注意到参数更新值$\Delta\theta$的单位和参数$\theta$本身的单位不匹配(SGD，动量法，以及Adagrad也存在同样的问题)。为了解决这个问题，他们首先定义了一个新的指数指数衰减均值，这一次，他们使用的是参数更新值的平方，而不是梯度的平方。
 
 \begin{equation}
 E[\Delta \theta^2]_t = \gamma E[\Delta \theta^2]_{t-1} + (1 - \gamma) \Delta \theta^2_t
@@ -408,7 +408,7 @@ E[\Delta \theta^2]_t = \gamma E[\Delta \theta^2]_{t-1} + (1 - \gamma) \Delta \th
 
 The root mean squared error of parameter updates is thus: 
 
-进而得到参数更新值的均方根:
+进而得到参数更新值的均方根误差:
 
 \begin{equation}
 RMS[\Delta \theta]_{t} = \sqrt{E[\Delta \theta^2]_t + \epsilon}
@@ -427,7 +427,7 @@ Since $RMS[\Delta \theta]_{t}$ is unknown, we approximate it with the RMS of par
 
 With Adadelta, we do not even need to set a default learning rate, as it has been eliminated from the update rule.
 
-因为学习率会得到自动更新，所以Adadelta 方法的另一个特点(优点)是它不依赖于默认学习率。
+因为学习率会得到自动更新，所以Adadelta 方法的另一个特点(优点)是它甚至都不需要一个默认的学习率。
 
 \subsection{RMSprop}
 
@@ -454,7 +454,7 @@ RMSprop 在学习率上除以了一个梯度的均方根。Hinton建议$\gamma$�
 
 Adaptive Moment Estimation (Adam) \cite{Kingma2015} is another method that computes adaptive learning rates for each parameter. In addition to storing an exponentially decaying average of past squared gradients $v_t$ like Adadelta and RMSprop, Adam also keeps an exponentially decaying average of past gradients $m_t$, similar to momentum:
 
-Adaptive Moment Estimation (Adam) \cite{Kingma2015} 是另一种针对每一个参数调整学习率的方法。这种方法不但像Adadelta和RMSprop一样记录梯度平方的移动平均$v_t$，它还像动量法一样记录梯度本身的移动平均$m_t$。
+Adaptive Moment Estimation (Adam) \cite{Kingma2015} 是另一种针对每一个参数调整学习率的方法。这种方法不但像Adadelta和RMSprop一样记录梯度平方$v_t$的指数衰减均值，它还像动量法一样记录梯度本身的指数衰减均值$m_t$。
 
 \begin{align}
 \begin{split}
@@ -465,7 +465,7 @@ v_t &= \beta_2 v_{t-1} + (1 - \beta_2) g_t^2
 
 $m_t$ and $v_t$ are estimates of the first moment (the mean) and the second moment (the uncentered variance) of the gradients respectively, hence the name of the method. As $m_t$ and $v_t$ are initialized as vectors of $0$'s, the authors of Adam observe that they are biased towards zero, especially during the initial time steps, and especially when the decay rates are small (i.e. $\beta_1$ and $\beta_2$ are close to $1$). 
 
-$m_t$ 和 $v_t$分别是梯度的一阶(均值)和二阶(方差)矩估计，所以称为Adaptive Moment Estimation(矩估计调整法)。因为$m_t$ 和 $v_t$都初始化为$0$，所以Adam的作者发现，这两者在训练中都存在向零方向的偏差的问题，在训练初期这个问题尤为严重。
+$m_t$ 和 $v_t$分别是梯度的一阶(均值)和二阶(方差)矩估计，所以称为Adaptive Moment Estimation(矩估计调整法)。因为$m_t$ 和 $v_t$都初始化为$0$向量，所以Adam的作者发现，这两者在训练中都存在向零方向的偏差的问题，在训练初期这个问题尤为严重。
 
 They counteract these biases by computing bias-corrected first and second moment estimates:
 
@@ -495,11 +495,11 @@ Adam的作者们提出$\beta_1$,$\beta_2$,和$\epsilon$分别取为$0.9$,$0.999$
 
 The following two figures provide some intuitions towards the optimization behaviour of the presented optimization algorithms.\footnote{Also have a look at \url{http://cs231n.github.io/neural-networks-3/} for a description of the same images by Karpathy and another concise overview of the algorithms discussed.}
 
-下面的两个图中给出了前述几种算法的示意，希望读者可以从中得到一些关于这些算法的直观印象。
+下面的两个图中给出了前述几种算法的示意，希望读者可以从中得到一些关于这些算法的直观印象。\footnote{感兴趣者可上 \url{http://cs231n.github.io/neural-networks-3/} 查看。}
 
 In Figure \ref{fig:contours_evaluation_optimizers}, we see the path they took on the contours of a loss surface. All started at the same point and took different paths to reach the minimum. Note that Adagrad, Adadelta, and RMSprop headed off immediately in the right direction and converged similarly fast, while Momentum and NAG were led off-track, evoking the image of a ball rolling down the hill. NAG, however, was able to correct its course sooner due to its increased responsiveness by looking ahead and headed to the minimum.
 
-在图\ref{fig:contours_evaluation_optimizers}里，我们可以看到几种算法都从同一点出发，然后沿着不同的路径收敛到极小值。从中可以看出Adagrad, Adadelta, and RMSprop很快就找到了正确的方向，并且收敛速度都差不多快。但是模拟球滚下山坡的动量法与NAG已开始都遭到了误导，但是NAG的预见性帮助它更早的走回了正路。
+在图\ref{fig:contours_evaluation_optimizers}里，我们可以看到几种算法都从同一点出发，然后沿着不同的路径收敛到极小值。从中可以看出Adagrad, Adadelta, and RMSprop很快就找到了正确的方向，并且收敛速度都差不多快。但是模拟球滚下山坡的动量法与NAG一开始都遭到了误导，但是NAG的预见性帮助它更早的走回了正路。
 
 Figure \ref{fig:saddle_point_evaluation_optimizers} shows the behaviour of the algorithms at a saddle point, i.e. a point where one dimension has a positive slope, while the other dimension has a negative slope, which pose a difficulty for SGD as we mentioned before. Notice here that SGD, Momentum, and NAG find it difficulty to break symmetry, although the latter two eventually manage to escape the saddle point, while Adagrad, RMSprop, and Adadelta quickly head down the negative slope, with Adadelta leading the charge.
 
@@ -533,7 +533,7 @@ As we can see, the adaptive learning-rate methods, i.e. Adagrad, Adadelta, RMSpr
 
 So, which optimizer should you use? If your input data is sparse, then you likely achieve the best results using one of the adaptive learning-rate methods. An additional benefit is that you will not need to tune the learning rate but will likely achieve the best results with the default value.
 
-所以到底应该选择那个优化算法呢? 如果输入数据有稀疏性，那么可能这些动态调整学习率的算法会比较好。这些方法的另一个优点是，使用者不需要调整初始学习率，因为它们一般情况下在默认设定下就可以达到最佳效果。
+所以到底应该选择那个优化算法呢? 如果输入数据有稀疏性，那么可能这些动态调整学习率的算法会比较好。这些方法的另一个优点是，使用者不需要调整学习率，因为它们一般情况下在默认设定下就可以达到最佳效果。
 
 In summary, RMSprop is an extension of Adagrad that deals with its radically diminishing learning rates. It is identical to Adadelta, except that Adadelta uses the RMS of parameter updates in the numinator update rule. Adam, finally, adds bias-correction and momentum to RMSprop. Insofar, RMSprop, Adadelta, and Adam are very similar algorithms that do well in similar circumstances. Kingma et al. \cite{Kingma2015} show that its bias-correction helps Adam slightly outperform RMSprop towards the end of optimization as gradients become sparser. Insofar, Adam might be the best overall choice.
 
