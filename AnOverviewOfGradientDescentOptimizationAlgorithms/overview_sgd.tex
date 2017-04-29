@@ -537,12 +537,19 @@ So, which optimizer should you use? If your input data is sparse, then you likel
 
 In summary, RMSprop is an extension of Adagrad that deals with its radically diminishing learning rates. It is identical to Adadelta, except that Adadelta uses the RMS of parameter updates in the numinator update rule. Adam, finally, adds bias-correction and momentum to RMSprop. Insofar, RMSprop, Adadelta, and Adam are very similar algorithms that do well in similar circumstances. Kingma et al. \cite{Kingma2015} show that its bias-correction helps Adam slightly outperform RMSprop towards the end of optimization as gradients become sparser. Insofar, Adam might be the best overall choice.
 
+作为总结，RMSprop 是 Adagrad 的一个扩展算法，它主要解决的是 Adagrad 学习率单调衰减的问题。Adadelta 与 RMSprop 几乎一样，不同之处在于，Adadelta 在学习率的分子上使用了参数更新的方均根误差。而Adam 则在Adagrad的基础之上加入了偏差修正，以及动量项。实际上 RMSprop, Adadelta, 和 Adam 是很类似的算法，他们也在类似的问题上表现差不多一样良好。Kingma et al \cite{Kingma2015} 指出Adam 的偏差修正使得它在优化收敛的最后阶段，梯度值比较稀疏的时候表现略为优于 RMSprop. 所以目前为止，Adam 可能是这几个中最好的选择。
+
 Interestingly, many recent papers use vanilla SGD without momentum and a simple learning rate annealing schedule. As has been shown, SGD usually achieves to find a minimum, but it might take significantly longer than with some of the optimizers, is much more reliant on a robust initialization and annealing schedule, and may get stuck in saddle points rather than local minima. Consequently, if you care about fast convergence and train a deep or complex neural network, you should choose one of the adaptive learning rate methods.
 
-\section{Parallelizing and distributing SGD} \label{sec:parallelizing}
+有意思的是，最近很多研究论文仅仅使用最原始不包含动量项的 SGD 以及简单的学习率衰减。如上面所述 SGD 一般可以找到极小值，但是可能比前述的优化算法慢很多，而且它还非常依赖于初始值与学习率衰减的选取，并且可能会卡在鞍点附近而找不到局部最小值。所以，如果研究者关系收敛速度，或者训练的是深度较大和比较复杂的神经网络时，就应当选取上述的动态调整学习率的模型。
+
+%\section{Parallelizing and distributing SGD} \label{sec:parallelizing}
+\section{并行与分布式 SGD} \label{sec:parallelizing}
 
 Given the ubiquity of large-scale data solutions and the availability of low-commodity clusters, distributing SGD to speed it up further is an obvious choice.
 SGD by itself is inherently sequential: Step-by-step, we progress further towards the minimum. Running it provides good convergence but can be slow particularly on large datasets. In contrast, running SGD asynchronously is faster, but suboptimal communication between workers can lead to poor convergence. Additionally, we can also parallelize SGD on one machine without the need for a large computing cluster. The following are algorithms and architectures that have been proposed to optimize parallelized and distributed SGD.
+
+
 
 \subsection{Hogwild!}
 
@@ -564,19 +571,29 @@ TensorFlow\footnote{\url{https://www.tensorflow.org/}} \cite{Abadi2015a} is Goog
 
 Zhang et al. \cite{Zhang2014} propose Elastic Averaging SGD (EASGD), which links the parameters of the workers of asynchronous SGD with an elastic force, i.e. a center variable stored by the parameter server. This allows the local variables to fluctuate further from the center variable, which in theory allows for more exploration of the parameter space. They show empirically that this increased capacity for exploration leads to improved performance by finding new local optima.
 
-\section{Additional strategies for optimizing SGD} \label{sec:strategies}
+%\section{Additional strategies for optimizing SGD} \label{sec:strategies}
+\section{其它优化 SGD 的方法} \label{sec:strategies}
 
 Finally, we introduce additional strategies that can be used alongside any of the previously mentioned algorithms to further improve the performance of SGD. For a great overview of some other common tricks, refer to \cite{LeCun1998}.
+
+最后我们来介绍其它一些与前述方法不同的作法来进一步优化SGD。对于另一些在这里也没有涉及的技巧请参考\cite{LeCun1998}。
 
 \subsection{Shuffling and Curriculum Learning} \label{sec:shuffling}
 
 Generally, we want to avoid providing the training examples in a meaningful order to our model as this may bias the optimization algorithm. Consequently, it is often a good idea to shuffle the training data after every epoch. 
 
+一般来讲，我们不希望训练数据的特殊排序影响到优化算法的表现。所以，我们经常在每一次大循环后对训练数据进行洗牌重新排序。
+
 On the other hand, for some cases where we aim to solve progressively harder problems, supplying the training examples in a meaningful order may actually lead to improved performance and better convergence. The method for establishing this meaningful order is called Curriculum Learning \cite{Bengio2009a}. 
+
+但是另一方面，在研究有些问题的时候，对训练数据进行适当排序会提升算法的表现和收敛的速度。这种对训练数据进行特殊排序的方法叫做 Curriculum Learning \cite{Bengio2009a}.
 
 Zaremba and Sutskever \cite{Zaremba2014a} were only able to train LSTMs to evaluate simple programs using Curriculum Learning and show that a combined or mixed strategy is better than the naive one, which sorts examples by increasing difficulty.
 
-\subsection{Batch normalization}
+Zaremba and Sutskever \cite{Zaremba2014a} 在训练 LSTMs 的时候发现必须使用 Curriculum Learning 才可以。而且他们指出，混合策略要优于把训练数据按照难易程度简单排序的单一的策略。
+
+%\subsection{Batch normalization}
+\subsection{批规范化}
 
 To facilitate learning, we typically normalize the initial values of our parameters by initializing them with zero mean and unit variance. As training progresses and we update parameters to different extents, we lose this normalization, which slows down training and amplifies changes as the network becomes deeper.
 
