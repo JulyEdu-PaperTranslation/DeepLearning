@@ -555,21 +555,31 @@ SGD by itself is inherently sequential: Step-by-step, we progress further toward
 
 Niu et al. \cite{Niu2011} introduce an update scheme called Hogwild! that allows performing SGD updates in parallel on CPUs. Processors are allowed to access shared memory without locking the parameters. This only works if the input data is sparse, as each update will only modify a fraction of all parameters. They show that in this case, the update scheme achieves almost an optimal rate of convergence, as it is unlikely that processors will overwrite useful information.
 
+Niu et al. \cite{Niu2011} 介绍了一种叫做 Hogwild! 的更新算法. 它使得 SGD 可以在 CPU 集群中并行进行。处理器可以在不锁定参数的情况下读取共享内存。因为这种更新只能改动一部分参数，所以这种方法只在输入数据比较稀疏的时候有效。他们的研究表明，这种情况下，Hogwild!方法可以达到几乎最优的收敛速度，因为在更新过程中，处理器不会轻易改写有用的信息。
+
 \subsection{Downpour SGD}
 
 Downpour SGD is an asynchronous variant of SGD that was used by Dean et al. \cite{Dean2012} in their DistBelief framework (the predecessor to TensorFlow) at Google. It runs multiple replicas of a model in parallel on subsets of the training data. These models send their updates to a parameter server, which is split across many machines. Each machine is responsible for storing and updating a fraction of the model's parameters. However, as replicas don't communicate with each other e.g. by sharing weights or updates, their parameters are continuously at risk of diverging, hindering convergence.
+
+Downpour SGD 是由Dean et al. \cite{Dean2012}在他们在GOOGLE的DistBelief架构(TensorFlow 的前身)下引进的 SGD的一个并行变种。它把数据集分为若干子集合，并同时在每一个子集合上训练模型。这些模型把他们的参数更新发送到一个分散在很多个机器上的参数服务器。每一个机器负责存储与更新一部分模型参数。但是因为每一个子集上的模型不与其它子集上的模型交换数据，以及参数更新，这种方法会一直面临模型参数发散的风险。
 
 \subsection{Delay-tolerant Algorithms for SGD}
 
 McMahan and Streeter \cite{Mcmahan2014} extend AdaGrad to the parallel setting by developing delay-tolerant algorithms that not only adapt to past gradients, but also to the update delays. This has been shown to work well in practice.
 
+McMahan 与 Streeter \cite{Mcmahan2014} 通过建立delay-tolerant 算法把 AdaGrad 扩展到并行架构。这种算法不但动态适应过去的参数更新值，而且也动态适应更新延迟。这个做法在实际操作中效果不错。
+
 \subsection{TensorFlow}
 
 TensorFlow\footnote{\url{https://www.tensorflow.org/}} \cite{Abadi2015a} is Google's recently open-sourced framework for the implementation and deployment of large-scale machine learning models. It is based on their experience with DistBelief and is already used internally to perform computations on a large range of mobile devices as well as on large-scale distributed systems. The distributed version, which was released in April 2016 recently in April 2016\footnote{\url{http://googleresearch.blogspot.ie/2016/04/announcing-tensorflow-08-now-with.html}} relies on a computation graph that is split into a subgraph for every device, while communication takes place using Send/Receive node pairs.
 
+TensorFlow\footnote{\url{https://www.tensorflow.org/}} \cite{Abadi2015a} 是 GOOGL 最近开源的大规模机器学习研发平台。它的建立基于Google之前在 DistBelief 上的经验，并已经在Google内部的大规模移动设备以及大规模分布式系统中得到广泛应用。2016年四月发布的分布式版本\footnote{\url{http://googleresearch.blogspot.ie/2016/04/announcing-tensorflow-08-now-with.html}}，使用一个分布在各个设备中的computation graph, 使用发送和接受图节点的方式实现设备之间的数据沟通。
+
 \subsection{Elastic Averaging SGD}
 
 Zhang et al. \cite{Zhang2014} propose Elastic Averaging SGD (EASGD), which links the parameters of the workers of asynchronous SGD with an elastic force, i.e. a center variable stored by the parameter server. This allows the local variables to fluctuate further from the center variable, which in theory allows for more exploration of the parameter space. They show empirically that this increased capacity for exploration leads to improved performance by finding new local optima.
+
+Zhang et al. \cite{Zhang2014} 提出Elastic Averaging SGD (EASGD)方法，这种方法用弹性的方式连接SGD的各个并行部分的参数，这种弹力通过一个存储在参数服务器中的参数来实现。这种方法允许局部参数获得更大的活动范围，这理论上增加了模型训练在参数空间上的探索能力。而作者们的数值试验结果显示，这种做法在寻找新的局部极值上确实表现良好。
 
 %\section{Additional strategies for optimizing SGD} \label{sec:strategies}
 \section{其它优化 SGD 的方法} \label{sec:strategies}
@@ -597,30 +607,46 @@ Zaremba and Sutskever \cite{Zaremba2014a} 在训练 LSTMs 的时候发现必须�
 
 To facilitate learning, we typically normalize the initial values of our parameters by initializing them with zero mean and unit variance. As training progresses and we update parameters to different extents, we lose this normalization, which slows down training and amplifies changes as the network becomes deeper.
 
+为了改善训练效果，我们通常会在训练前对数据进行归一化处理(零均值单位方差)。但是在训练过程中随着参数不断的更新，数据逐渐失去初始化时人为赋予的规则性，进而导致训练减速，这种现象在深度网络训练中尤为明显。
+
 Batch normalization \cite{Ioffe2015a} reestablishes these normalizations for every mini-batch and changes are back-propagated through the operation as well. By making normalization part of the model architecture, we are able to use higher learning rates and pay less attention to the initialization parameters. Batch normalization additionally acts as a regularizer, reducing (and sometimes even eliminating) the need for Dropout.
+
+批规范化 \cite{Ioffe2015a} 在每一次小批量计算之前重新进行规范化，并且确保改动进入模型训练的反向传播。批规范化可以通过在模型架构上的部分改动来实现，并令我们可以使用更大的学习率，而且不必太在意参数的初始化。批规范化还可以起到regularizer的作用，减少(有时候甚至解除)对Dropout的需求。
 
 \subsection{Early stopping}
 
 According to Geoff Hinton: ``Early stopping (is) beautiful free lunch''\footnote{NIPS 2015 Tutorial slides, slide 63,  \url{http://www.iro.umontreal.ca/~bengioy/talks/DL-Tutorial-NIPS2015.pdf}}. You should thus always monitor error on a validation set during training and stop (with some patience) if your validation error does not improve enough.
 
+按照 Geoff Hinton 的话说:"Early stopping (是) 免费午餐"\footnote{NIPS 2015 Tutorial slides, slide 63,  \url{http://www.iro.umontreal.ca/~bengioy/talks/DL-Tutorial-NIPS2015.pdf}}. 你总是可以通过在训练过程中监控模型在验证数据上的误差，并在每一步训练后误差的减小程度小于预设值时决定终止训练。
+
 \subsection{Gradient noise}
 
 Neelakantan et al. \cite{Neelakantan2015} add noise that follows a Gaussian distribution $N(0, \sigma^2_t)$ to each gradient update:
+
+Neelakantan et al. \cite{Neelakantan2015} 在梯度更新中加入符合高斯分布的误差$N(0, \sigma^2_t)$,
 
 \begin{equation}
 g_{t, i} = g_{t, i} + N(0, \sigma^2_t)
 \end{equation}
 
 They anneal the variance according to the following schedule:
+
+并通过下面的步骤逐渐衰减这个高斯分布的误差，
+
 \begin{equation}
 \sigma^2_t = \frac{\eta}{(1 + t)^\gamma}
 \end{equation}
 
 They show that adding this noise makes networks more robust to poor initialization and helps training particularly deep and complex networks. They suspect that the added noise gives the model more chances to escape and find new local minima, which are more frequent for deeper models.
 
-\section{Conclusion}
+方法的作者指出，加入这些噪音后，网络对于糟糕的初始化表现的更加稳定，并且尤其在深度和复杂的网络中表现良好。他们猜测，通过加入噪音，模型有更大的几率可以从深度模型里很常遇到的局部极小值中解脱出来。
+
+%\section{Conclusion}
+\section{结论}
 
 In this blog post, we have initially looked at the three variants of gradient descent, among which mini-batch gradient descent is the most popular. We have then investigated algorithms that are most commonly used for optimizing SGD: Momentum, Nesterov accelerated gradient, Adagrad, Adadelta, RMSprop, Adam, as well as different algorithms to optimize asynchronous SGD. Finally, we've considered other strategies to improve SGD such as shuffling and curriculum learning, batch normalization, and early stopping.
+
+在本文中，我们首先考察了梯度法的三种类型，其中小批量随即梯度法是目前最常用的方法。然后我们研究了最常用的梯度优化方法:Momentum, Nesterov accelerated gradient, Adagrad, Adadelta, RMSprop, Adam, 以及梯度法的并行算法。最后，我们介绍了一下其它可以改善随机梯度法的几种做法包括：shuffling and curriculum learning, 批规范化, 以及 early stopping。
 
 \bibliography{overview_sgd}
 \bibliographystyle{plain}
