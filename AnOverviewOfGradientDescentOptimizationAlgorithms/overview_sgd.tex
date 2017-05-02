@@ -63,8 +63,8 @@ showstringspaces=false
   Sebastian Ruder\\
   Insight Centre for Data Analytics, NUI Galway\\
   Aylien Ltd., Dublin\\
-  \texttt{ruder.sebastian@gmail.com}、、
-  翻译:管枫(初)，彭博(复)，zhangdotcn(审)
+  \texttt{ruder.sebastian@gmail.com}\\
+  \text{翻译:管枫(初)，彭博(复)，zhangdotcn(审)}
 }
 
 \begin{document}
@@ -454,7 +454,7 @@ RMSprop 在学习率上除以了一个梯度的均方根。Hinton建议$\gamma$�
 
 Adaptive Moment Estimation (Adam) \cite{Kingma2015} is another method that computes adaptive learning rates for each parameter. In addition to storing an exponentially decaying average of past squared gradients $v_t$ like Adadelta and RMSprop, Adam also keeps an exponentially decaying average of past gradients $m_t$, similar to momentum:
 
-Adaptive Moment Estimation (Adam) \cite{Kingma2015} 是另一种针对每一个参数调整学习率的方法。这种方法不但像Adadelta和RMSprop一样记录梯度平方$v_t$的指数衰减均值，它还像动量法一样记录梯度本身的指数衰减均值$m_t$。
+Adaptive Moment Estimation (Adam) \cite{Kingma2015} 是另一种针对每一个参数调整学习率的方法。这种方法不但像Adadelta和RMSprop一样记录梯度平方的指数衰减均值$v_t$，它还像动量法一样记录梯度本身的指数衰减均值$m_t$。
 
 \begin{align}
 \begin{split}
