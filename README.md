@@ -50,13 +50,13 @@
 **[更多文章](#deep-learning-papers)**
 
 ### [An overview of gradient descent optimization algorithms](https://github.com/JulyEdu-PaperTranslation/DeepLearning/tree/master/AnOverviewOfGradientDescentOptimizationAlgorithms)
-* **题目**: 
-* **翻译**：彭博(初)，管枫(复)，(审)
+* **题目**: 梯度下降类优化算法概述
+* **翻译**：彭博(初)，管枫(复)，(审)zhangdotcn
 * **绪论**：
 * **译者注**：
  * **文章结构:**
  * (1) 
  * (2) 
  * (3) 
-* **翻译全文下载**:()
+* **翻译全文下载**:([pdf](https://github.com/JulyEdu-PaperTranslation/DeepLearning/blob/master/AnOverviewOfGradientDescentOptimizationAlgorithms/overview_sgd.pdf))
 
