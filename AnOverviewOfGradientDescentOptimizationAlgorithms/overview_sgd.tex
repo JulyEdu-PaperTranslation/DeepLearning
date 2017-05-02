@@ -537,11 +537,11 @@ So, which optimizer should you use? If your input data is sparse, then you likel
 
 In summary, RMSprop is an extension of Adagrad that deals with its radically diminishing learning rates. It is identical to Adadelta, except that Adadelta uses the RMS of parameter updates in the numinator update rule. Adam, finally, adds bias-correction and momentum to RMSprop. Insofar, RMSprop, Adadelta, and Adam are very similar algorithms that do well in similar circumstances. Kingma et al. \cite{Kingma2015} show that its bias-correction helps Adam slightly outperform RMSprop towards the end of optimization as gradients become sparser. Insofar, Adam might be the best overall choice.
 
-作为总结，RMSprop 是 Adagrad 的一个扩展算法，它主要解决的是 Adagrad 学习率单调衰减的问题。Adadelta 与 RMSprop 几乎一样，不同之处在于，Adadelta 在学习率的分子上使用了参数更新的方均根误差。而Adam 则在Adagrad的基础之上加入了偏差修正，以及动量项。实际上 RMSprop, Adadelta, 和 Adam 是很类似的算法，他们也在类似的问题上表现差不多一样良好。Kingma et al \cite{Kingma2015} 指出Adam 的偏差修正使得它在优化收敛的最后阶段，梯度值比较稀疏的时候表现略为优于 RMSprop. 所以目前为止，Adam 可能是这几个中最好的选择。
+作为总结，RMSprop 是 Adagrad 的一个扩展算法，它主要解决的是 Adagrad 学习率单调衰减的问题。Adadelta 与 RMSprop 几乎一样，不同之处在于，Adadelta 在学习率的分子上使用了参数更新的均方根误差。而Adam 则在RMSprop的基础之上加入了偏差修正，以及动量项。实际上 RMSprop, Adadelta, 和 Adam 是很类似的算法，他们也在类似的问题上表现差不多一样良好。Kingma et al \cite{Kingma2015} 指出Adam 的偏差修正使得它在优化收敛的最后阶段，梯度值比较稀疏的时候表现略为优于 RMSprop. 所以目前为止，Adam 可能是这几个中最好的选择。
 
 Interestingly, many recent papers use vanilla SGD without momentum and a simple learning rate annealing schedule. As has been shown, SGD usually achieves to find a minimum, but it might take significantly longer than with some of the optimizers, is much more reliant on a robust initialization and annealing schedule, and may get stuck in saddle points rather than local minima. Consequently, if you care about fast convergence and train a deep or complex neural network, you should choose one of the adaptive learning rate methods.
 
-有意思的是，最近很多研究论文仅仅使用最原始不包含动量项的 SGD 以及简单的学习率衰减。如上面所述 SGD 一般可以找到极小值，但是可能比前述的优化算法慢很多，而且它还非常依赖于初始值与学习率衰减的选取，并且可能会卡在鞍点附近而找不到局部最小值。所以，如果研究者关系收敛速度，或者训练的是深度较大和比较复杂的神经网络时，就应当选取上述的动态调整学习率的模型。
+有意思的是，最近很多研究论文仅仅使用最原始不包含动量项的 SGD 以及简单的学习率衰减策略。如上面所述 SGD 一般可以找到极小值，但是可能比前述的优化算法慢很多，而且它还非常依赖于初始值与学习率衰减的选取，并且可能会卡在鞍点附近而找不到局部最小值。所以，如果研究者关心收敛速度，或者训练的是深度较大和比较复杂的神经网络时，就应当选取上述的动态调整学习率的模型。
 
 %\section{Parallelizing and distributing SGD} \label{sec:parallelizing}
 \section{并行与分布式 SGD} \label{sec:parallelizing}
@@ -549,7 +549,7 @@ Interestingly, many recent papers use vanilla SGD without momentum and a simple 
 Given the ubiquity of large-scale data solutions and the availability of low-commodity clusters, distributing SGD to speed it up further is an obvious choice.
 SGD by itself is inherently sequential: Step-by-step, we progress further towards the minimum. Running it provides good convergence but can be slow particularly on large datasets. In contrast, running SGD asynchronously is faster, but suboptimal communication between workers can lead to poor convergence. Additionally, we can also parallelize SGD on one machine without the need for a large computing cluster. The following are algorithms and architectures that have been proposed to optimize parallelized and distributed SGD.
 
-
+鉴于大数据分析的普遍性以及低廉的聚类方法的可用性，分布式SGD的加速方法会是一个更加明智的选择。SGD本身就是一个按部就班的方法，一步一步逐渐到达最低值。SGD的使用可以提供很好的收敛性，但是效率很低，尤其是在大数据集上。SGD的异步使用速度回更快，但是worker之间的通信问题将会导致低的收敛性。除此之外，我们还可以在一台电脑上平行计算SGD，以下就是曾被提出用来优化并行与分布式SGD计算的算法和框架。
 
 \subsection{Hogwild!}
 
@@ -573,7 +573,7 @@ McMahan 与 Streeter \cite{Mcmahan2014} 通过建立delay-tolerant 算法把 Ada
 
 TensorFlow\footnote{\url{https://www.tensorflow.org/}} \cite{Abadi2015a} is Google's recently open-sourced framework for the implementation and deployment of large-scale machine learning models. It is based on their experience with DistBelief and is already used internally to perform computations on a large range of mobile devices as well as on large-scale distributed systems. The distributed version, which was released in April 2016 recently in April 2016\footnote{\url{http://googleresearch.blogspot.ie/2016/04/announcing-tensorflow-08-now-with.html}} relies on a computation graph that is split into a subgraph for every device, while communication takes place using Send/Receive node pairs.
 
-TensorFlow\footnote{\url{https://www.tensorflow.org/}} \cite{Abadi2015a} 是 GOOGL 最近开源的大规模机器学习研发平台。它的建立基于Google之前在 DistBelief 上的经验，并已经在Google内部的大规模移动设备以及大规模分布式系统中得到广泛应用。2016年四月发布的分布式版本\footnote{\url{http://googleresearch.blogspot.ie/2016/04/announcing-tensorflow-08-now-with.html}}，使用一个分布在各个设备中的computation graph, 使用发送和接受图节点的方式实现设备之间的数据沟通。
+TensorFlow\footnote{\url{https://www.tensorflow.org/}} \cite{Abadi2015a} 是 Google 最近开源的大规模机器学习研发平台。它的建立基于Google之前在 DistBelief 上的经验，并已经在Google内部的大规模移动设备以及大规模分布式系统中得到广泛应用。2016年四月发布的分布式版本\footnote{\url{http://googleresearch.blogspot.ie/2016/04/announcing-tensorflow-08-now-with.html}}，使用一个分布在各个设备中的计算图, 使用发送和接受图节点的方式实现设备之间的数据沟通。
 
 \subsection{Elastic Averaging SGD}
 
