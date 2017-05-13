@@ -74,22 +74,22 @@ showstringspaces=false
 \begin{abstract}
 Gradient descent optimization algorithms, while increasingly popular, are often used as black-box optimizers, as practical explanations of their strengths and weaknesses are hard to come by. This article aims to provide the reader with intuitions with regard to the behaviour of different algorithms that will allow her to put them to use. In the course of this overview, we look at different variants of gradient descent, summarize challenges, introduce the most common optimization algorithms, review architectures in a parallel and distributed setting, and investigate additional strategies for optimizing gradient descent.
 
-梯度下降类算法在优化问题中非常流行，由于难以简单的对众多梯度下降类算法给出一个实用的优劣分析，所以实际应用中这类算法常常被当作黑箱算法来使用。本文旨在为读者提供不同算法效果的直观展示，并希望读者能够在实际问题中更合理的选用梯度下降类算法。在这个概述中，我们考察了不同类型的梯度下降算法，总结其面临的挑战，并介绍了几种常用的具体算法，简单介绍并行与分布式架构，继而探索了其他一些梯度下降类优化策略。
+梯度下降类算法在优化问题中非常流行，由于难以简单的对众多梯度下降类算法给出一个实用的优劣分析，实际应用中这类算法常常被当作黑箱算法来使用。本文旨在为读者提供不同算法效果的直观展示，并希望读者能够在实际问题中更合理的选用梯度下降类算法。在这个概述中，我们考察了不同类型的梯度下降算法，总结其面临的挑战，并介绍了几种常用的具体算法，简单介绍并行与分布式架构，继而探索了其他一些梯度下降类优化策略。
 \end{abstract}
 
 \section{Introduction}
 
 Gradient descent is one of the most popular algorithms to perform optimization and by far the most common way to optimize neural networks. At the same time, every state-of-the-art Deep Learning library contains implementations of various algorithms to optimize gradient descent (e.g. lasagne's\footnote{\url{http://lasagne.readthedocs.org/en/latest/modules/updates.html}}, caffe's\footnote{\url{http://caffe.berkeleyvision.org/tutorial/solver.html}}, and keras'\footnote{\url{http://keras.io/optimizers/}} documentation). These algorithms, however, are often used as black-box optimizers, as practical explanations of their strengths and weaknesses are hard to come by.
 
-作为当下最流行的优化算法之一，梯度下降目前也是神经网络中最常用的优化方法。同时，业界先进的深度学习库里都包含了优化梯度下降法各种算法来(比如:lasagne\footnote{\url{http://lasagne.readthedocs.org/en/latest/modules/updates.html}}, caffe\footnote{\url{http://caffe.berkeleyvision.org/tutorial/solver.html}}, and keras\footnote{\url{http://keras.io/optimizers/}} documentation).由于难以合理的解释其优缺点，这些算法通常被当作黑箱算法来使用。
+作为当下最流行的优化算法之一，梯度下降目前也是神经网络中最常用的优化方法。同时，业界先进的深度学习库里都包含了优化梯度下降法各种算法(比如:lasagne\footnote{\url{http://lasagne.readthedocs.org/en/latest/modules/updates.html}}, caffe\footnote{\url{http://caffe.berkeleyvision.org/tutorial/solver.html}}, and keras\footnote{\url{http://keras.io/optimizers/}} documentation).由于难以合理的解释其优缺点，这些算法通常被当作黑箱算法来使用。
 
 This article aims at providing the reader with intuitions with regard to the behaviour of different algorithms for optimizing gradient descent that will help her put them to use. In Section \ref{sec:gradient_descent_variants}, we are first going to look at the different variants of gradient descent. We will then briefly summarize challenges during training in Section \ref{sec:challenges}. Subsequently, in Section \ref{sec:algos}, we will introduce the most common optimization algorithms by showing their motivation to resolve these challenges and how this leads to the derivation of their update rules. Afterwards, in Section \ref{sec:parallelizing}, we will take a short look at algorithms and architectures to optimize gradient descent in a parallel and distributed setting. Finally, we will consider additional strategies that are helpful for optimizing gradient descent in Section \ref{sec:strategies}.
 
-本文旨在为读者提供一些用来优化梯度下降的不同算法的效果的直观展示，并希望能够帮助读者在实际问题中更合理的选择和使用梯度下降类算法。第\ref{sec:gradient_descent_variants}节，我们首先考察梯度下降算法的几种类型。然后在第\ref{sec:challenges}节中简单总结在使用中容易遇到的问题。接下来在第\ref{sec:algos}节中，我们介绍最常用的几种算法的动机以及其数学实现，并在第\ref{sec:parallelizing}节中简单看一下在并行和分布式环境中,这些算法和框架是如何来优化梯度下降算法的。最后在第\ref{sec:strategies}节中，我们介绍其他一些可以用来优化梯度下降类算法的策略。
+本文旨在为读者提供一些优化梯度下降的不同算法的效果的直观展示，并希望能够帮助读者在实际问题中更合理的选择和使用梯度下降类算法。第\ref{sec:gradient_descent_variants}节，我们首先考察梯度下降算法的几种类型。然后在第\ref{sec:challenges}节中简单总结在使用中容易遇到的问题。接下来在第\ref{sec:algos}节中，我们介绍最常用的几种算法的动机以及其数学实现，并在第\ref{sec:parallelizing}节中简单看一下在并行和分布式环境中,这些算法和框架是如何来优化梯度下降算法的。最后在第\ref{sec:strategies}节中，我们介绍其他一些可以用来优化梯度下降类算法的策略。
 
 Gradient descent is a way to minimize an objective function $J(\theta)$ parameterized by a model's parameters $\theta \in \mathbb{R}^d$ by updating the parameters in the opposite direction of the gradient of the objective function $\nabla_\theta J(\theta)$ w.r.t. to the parameters. The learning rate $\eta$ determines the size of the steps we take to reach a (local) minimum. In other words, we follow the direction of the slope of the surface created by the objective function downhill until we reach a valley.\footnote{If you are unfamiliar with gradient descent, you can find a good introduction on optimizing neural networks at \url{http://cs231n.github.io/optimization-1/}.}
 
-梯度下降法的基本思想是向着目标函数$J(\theta)$梯度的反方向更新模型参数$\theta \in \mathbb{R}^d$，以此达到最小化目标函数的目的. 并通过定义学习率$\eta$来决定每一次参数更新时步长的大小。如果把目标函数图像看作一个山丘，梯度下降算法就是沿着山坡最陡峭的方向逐级下降直至山谷的过程。\footnote{对于梯度下降不熟悉的同学可以参考\url{http://cs231n.github.io/optimization-1/}.}
+梯度下降法的基本思想是向着目标函数$J(\theta)$梯度的反方向更新模型参数$\theta \in \mathbb{R}^d$，以此达到最小化目标函数的目的. 并通过定义学习率$\eta$来决定参数更新的步长。如果把目标函数图像看作一个山丘，梯度下降算法就是沿着山坡最陡峭的方向逐渐下降直至山谷的过程。\footnote{对于梯度下降不熟悉的同学可以参考\url{http://cs231n.github.io/optimization-1/}.}
 
 
 \section{Gradient descent variants} \label{sec:gradient_descent_variants}
@@ -111,7 +111,7 @@ Vanilla gradient descent, aka batch gradient descent, computes the gradient of t
 
 As we need to calculate the gradients for the whole dataset to perform just \emph{one} update, batch gradient descent can be very slow and is intractable for datasets that do not fit in memory. Batch gradient descent also does not allow us to update our model \emph{online}, i.e. with new examples on-the-fly.
 
-由于在批梯度下降中为了执行一次更新,我们需要在整个数据集上计算梯度,因此这将会是很慢的,并且内存也是一个棘手的问题.批梯度下降同样也不适用于在线更新我们的模型,例如使用新的样例on-the-fly.
+在批梯度下降中执行一次更新,我们需要计算整个数据集的梯度,因此速度很慢,并且内存也是一个棘手的问题.批梯度下降也无法线更新我们的模型,例如使用新的样例on-the-fly.
 
 In code, batch gradient descent looks something like this:
 
@@ -125,11 +125,11 @@ for i in range(nb_epochs):
 
 For a pre-defined number of epochs,  we first compute the gradient vector \lstinline{params_grad} of the loss function for the whole dataset w.r.t. our parameter vector \lstinline{params}.  Note that state-of-the-art deep learning libraries provide automatic differentiation that efficiently computes the gradient w.r.t. some parameters. If you derive the gradients yourself, then gradient checking is a good idea.\footnote{Refer to \url{http://cs231n.github.io/neural-networks-3/} for some great tips on how to check gradients properly.}
 
-对于预先确定的迭代次数\lstinline{nb_epochs}，在每一次迭代中，我们首先在整个数据集上计算损失函数关于模型参数向量\lstinline{params}的梯度\lstinline{params_grad}. 最先进的深度学习代码库都会提供计算梯度的工具，但是如果使用者使用自己的梯度计算工具的话，最好使用梯度检查\footnote{梯度检查请参考 \url{http://cs231n.github.io/neural-networks-3/}}确保不会出错。
+对于预先确定的迭代次数\lstinline{nb_epochs}，在每一次迭代中，我们首先在整个数据集上计算损失函数关于模型参数向量\lstinline{params}的梯度\lstinline{params_grad}. 业界先进的深度学习库都会提供计算梯度的工具，如果使用自己的梯度计算工具，最好使用梯度检查\footnote{梯度检查请参考 \url{http://cs231n.github.io/neural-networks-3/}}以确保无误。
 
 We then update our parameters in the direction of the gradients with the learning rate determining how big of an update we perform. Batch gradient descent is guaranteed to converge to the global minimum for convex error surfaces and to a local minimum for non-convex surfaces.
 
-然后我们向着梯度相反的方向更新参数，并利用学习率(\lstinline{learning rate})来决定更新步伐的大小。批梯度下降对于凸函数确保收敛于全局最小值，而对于非凸函数确保收敛于局部最小值。
+然后我们沿着梯度相反的方向更新参数，学习率(\lstinline{learning rate})确定更新步长。对于凸函数批梯度下降确保收敛于全局最小值，而对于非凸函数确保收敛于局部最小值。
 
 %\subsection{Stochastic gradient descent}
 \subsection{随机梯度下降法}
@@ -144,7 +144,7 @@ Stochastic gradient descent (SGD) in contrast performs a parameter update for \e
 
 Batch gradient descent performs redundant computations for large datasets, as it recomputes gradients for similar examples before each parameter update. SGD does away with this redundancy by performing one update at a time. It is therefore usually much faster and can also be used to learn online.
 
-在样本数量极大的时候，批梯度下降法在每一次参数更新前，要对大量相似的样本计算其损失函数的梯度，这造成很多冗余的计算。SGD 有效避免了这种冗余，所以他通常比较快，而且适用于样本的在线更新(对于在线添加的样本，可以方便的直接带入迭代之中)
+在样本数量极大的时候，批梯度下降法在每一次参数更新前要对大量相似的样本计算梯度，这造成大量冗余计算。SGD 有效避免了这种冗余，因此它通常更快，且适用于在线学习(对于在线添加的样本，可以方便的直接带入迭代之中)
 
 SGD performs frequent updates with a high variance that cause the objective function to fluctuate heavily as in Figure \ref{fig:sgd_fluctuation}.
 
@@ -161,7 +161,7 @@ https://upload.wikimedia.org/wikipedia/commons/f/f3/Stogra.png}{Wikipedia})}
 While batch gradient descent converges to the minimum of the basin the parameters are placed in, SGD's fluctuation, on the one hand, enables it to jump to new and potentially better local minima. On the other hand, this ultimately complicates convergence to the exact minimum, as SGD will keep overshooting. However, it has been shown that when we slowly decrease the learning rate, SGD shows the same convergence behaviour as batch gradient descent, almost certainly converging to a local or the global minimum for non-convex and convex optimization respectively.
 Its code fragment simply adds a loop over the training examples and evaluates the gradient w.r.t. each example. Note that we shuffle the training data at every epoch as explained in Section \ref{sec:shuffling}.
 
-相对比于批梯度下降法在参数空间中收敛于局部最小值的的表现来说，SGD的高震荡性，一方面使迭代有可能跳出当前的局部最小值并找到更好的局部最小值，另一方面却因为过于活跃而使得收敛变得异常困难。但是，已知的结果显示，只要在迭代中逐渐缩小学习率，那么SGD也会展现出和批梯度下降法类似的收敛效果——分别在凸函数和非凸函数的情形下收敛于整体极小值和局部极小值。在代码上，仅仅是关于训练样本增加了一个子循环来计算关于每一个样本的梯度。请注意我们在每一个外层迭代开始时随机打乱了样本顺序，关于这种技巧我们在第\ref{sec:shuffling}节进行详细介绍。
+相对比于批梯度下降法在参数空间中收敛于局部最小值的的表现来说，SGD的高震荡性，一方面使迭代有可能跳出当前的局部最小值并找到更好的局部最小值，另一方面却使得收敛变得异常困难。然而已知的结果显示，只要在迭代中逐渐减小学习率，那么SGD的收敛性可媲美批量梯度下降法——在凸函数和非凸函数的情形分别收敛于全局极小值和局部极小值。在代码上，仅仅是关于训练样本增加了一个子循环来计算关于每一个样本的梯度。请注意我们在每一个外层迭代开始时随机打乱了样本顺序，我们在第\ref{sec:shuffling}节详细介绍这种技巧。
 
 \begin{lstlisting}[language=python]
 for i in range(nb_epochs):
@@ -176,7 +176,7 @@ for i in range(nb_epochs):
 
 Mini-batch gradient descent finally takes the best of both worlds and performs an update for every mini-batch of $n$ training examples:
 
-最后小批量梯度下降法集中了前述两种方法的优点，每一次参数更新时，都使用一个含有$n$个样本的小批量来计算损失函数的剃度。
+小批量梯度下降法集中了上述两种方法的优点，每一次参数更新时，都使用一个含有$n$个样本的小批量来计算损失函数的梯度。
 
 \begin{equation}
 \theta = \theta - \eta \cdot \nabla_\theta J( \theta; x^{(i:i+n)}; y^{(i:i+n)})
@@ -184,7 +184,7 @@ Mini-batch gradient descent finally takes the best of both worlds and performs a
 
 This way, it a) reduces the variance of the parameter updates, which can lead to more stable convergence; and b) can make use of highly optimized matrix optimizations common to state-of-the-art deep learning libraries that make computing the gradient w.r.t. a mini-batch very efficient. Common mini-batch sizes range between $50$ and $256$, but can vary for different applications. Mini-batch gradient descent is typically the algorithm of choice when training a neural network and the term SGD usually is employed also when mini-batches are used. Note: In modifications of SGD in the rest of this post, we leave out the parameters $x^{(i:i+n)}; y^{(i:i+n)}$ for simplicity.
 
-这种方法,a) 降低了SGD中参数更新的剧烈震荡，所以收敛效果更好, b) 可以很高效的利用目前最先进的深度学习代码库中那些已经得到了高度优化的矩阵运算工具。通常，根据不同的应用场景，小批量的大小取在$50$到$256$之间。目前在神经网络的训练中经常使用小批量梯度下降法，并习惯性的称之为随机梯度下降法(SGD)。注：为了记号方便，在下文SGD改进版本的公式书写中，我们将省略$x^{(i:i+n)}; y^{(i:i+n)}$。
+通过这种方式,a) 降低了SGD中参数更新的剧烈震荡，所以收敛效果更好更稳定, b) 可以充分利用业界先进的深度学习库中高度优化的矩阵运算工具。通常，根据不同的应用场景，小批量的大小取在$50$到$256$之间。典型的，小批量梯度下降法在神经网络的训练中广泛使用，并习惯性的称之为随机梯度下降法(SGD)。注：为了记号方便，在下文SGD改进版本的公式书写中，我们将省略$x^{(i:i+n)}; y^{(i:i+n)}$。
 
 In code, instead of iterating over examples, we now iterate over mini-batches of size $50$:
 
@@ -203,7 +203,7 @@ for i in range(nb_epochs):
 
 Vanilla mini-batch gradient descent, however, does not guarantee good convergence, but offers a few challenges that need to be addressed:
 
-然而普通的小批量梯度下降法的收敛性仍然不太好，而且有如下的一些问题需要解决:
+然而普通的小批量梯度下降法仍无法保证良好的收敛性，而且有如下的一些问题需要解决:
 
 \begin{itemize}
 \item Choosing a proper learning rate can be difficult. A learning rate that is too small leads to painfully slow convergence, while a learning rate that is too large can hinder convergence and cause the loss function to fluctuate around the minimum or even to diverge.
@@ -211,9 +211,9 @@ Vanilla mini-batch gradient descent, however, does not guarantee good convergenc
 \item Learning rate schedules \cite{Robbins1951} try to adjust the learning rate during training by e.g. annealing, i.e. reducing the learning rate according to a pre-defined schedule or when the change in objective between epochs falls below a threshold. These schedules and thresholds, however, have to be defined in advance and are thus unable to adapt to a dataset's characteristics \cite{Darken1992}.
 \item 预定学习率衰减\cite{Robbins1951}的方法可以在训练过程中调整学习率，比如按照一开始定义好的计划逐渐削减学习率或者当相邻的两次迭代中目标函数的变化小于某一个阈值时减小学习率。但是这些计划和阈值都必须要在训练前就定义好，所以无法达到为训练样本量身定做的效果。
 \item Additionally, the same learning rate applies to all parameter updates. If our data is sparse and our features have very different frequencies, we might not want to update all of them to the same extent, but perform a larger update for rarely occurring features.
-\item 另外，所有的参数更新都使用了同样的学习率。如果数据具有稀疏性而且不同的特征出现的频率有很大差异时，我们更希望对那些极少出现的特征使用较大的学习率，而不是对大家一视同仁。
+\item 另外，所有的参数更新都使用了同样的学习率。如果数据具有稀疏性而且不同的特征出现的频率有很大差异时，我们更希望对那些极少出现的特征使用较大的学习率，而非一视同仁。
 \item Another key challenge of minimizing highly non-convex error functions common for neural networks is avoiding getting trapped in their numerous suboptimal local minima. Dauphin et al. \cite{Dauphin2014} argue that the difficulty arises in fact not from local minima but from saddle points, i.e. points where one dimension slopes up and another slopes down. These saddle points are usually surrounded by a plateau of the same error, which makes it notoriously hard for SGD to escape, as the gradient is close to zero in all dimensions.
-\item 另一个重要的问题是在神经网络的训练中，经常会遇到极为非凸的目标函数，此时很难避免参数被困在一些次优的局部极小值附近。Dauphin et al. \cite{Dauphin2014} 提出这类问题主要发生在鞍点附近。这些鞍点经常环绕着一些平原区域，而在这些区域中，损失函数的梯度很接近于零，所以SGD很难从中逃脱。
+\item 另一个重要的问题是，神经网络的训练中经常会遇到非凸的目标函数，此时参数往往被被限制在一些次优的局部极小值附近。Dauphin et al. \cite{Dauphin2014} 提出这类问题主要发生在鞍点附近。这些鞍点经常环绕着一些平原区域，而在这些区域中，损失函数的梯度很接近于零，所以SGD很难从中逃脱。
 \end{itemize}
 
 %\section{Gradient descent optimization algorithms} \label{sec:algos}
@@ -221,14 +221,14 @@ Vanilla mini-batch gradient descent, however, does not guarantee good convergenc
 
 In the following, we will outline some algorithms that are widely used by the Deep Learning community to deal with the aforementioned challenges. We will not discuss algorithms that are infeasible to compute in practice for high-dimensional data sets, e.g. second-order methods such as Newton's method\footnote{\url{https://en.wikipedia.org/wiki/Newton\%27s_method_in_optimization}}.
 
-下面我们介绍一些优化梯度下降算法，他们经常在深度学习中被用来处理上节所提到的问题和挑战。在此我们不讨论那些不适用于高维数据的方法，比如类似于牛顿法\footnote{\url{https://en.wikipedia.org/wiki/Newton\%27s_method_in_optimization}}的二阶算法。
+下面我们介绍一些优化梯度下降的算法，深度学习中用这些算法来处理上节所提到的问题和挑战。在此我们不讨论那些不适用于高维数据的方法，比如类似于牛顿法\footnote{\url{https://en.wikipedia.org/wiki/Newton\%27s_method_in_optimization}}的二阶算法。
 
 %\subsection{Momentum}
 \subsection{动量法}
 
 SGD has trouble navigating ravines, i.e. areas where the surface curves much more steeply in one dimension than in another \cite{Sutton1986}, which are common around local optima. In these scenarios, SGD oscillates across the slopes of the ravine while only making hesitant progress along the bottom towards the local optimum as in Figure \ref{fig:sgd_without_momentum}.
 
-SGD 那种在一个方向上很陡峭而在其他方向上比较平坦，形如峡谷的函数上表现差强人意\cite{Sutton1986}，而这种形状在局部极值附近却比较常见。在这种情况下，SGD经常如下图所描述的那样，在峡谷的两边震荡而不能顺利的沿着峡谷方向直接前往最优点。
+SGD 在一个方向上很陡峭而在其他方向上比较平坦形如峡谷的函数上表现差强人意\cite{Sutton1986}，而这种形状在局部极值附近却比较常见。在这种情况下，SGD经常如下图所描述的那样，在峡谷的两边震荡而不能顺利的沿着峡谷方向直接前往最优点。
 
 \begin{figure}[!htb]
     \centering
@@ -249,7 +249,7 @@ SGD 那种在一个方向上很陡峭而在其他方向上比较平坦，形如�
 
 Momentum \cite{Qian1999} is a method that helps accelerate SGD in the relevant direction and dampens oscillations as can be seen in Figure \ref{fig:sgd_with_momentum}. It does this by adding a fraction $\gamma$ of the update vector of the past time step to the current update vector\footnote{Some implementations exchange the signs in the equations.}
 
-如图\ref{fig:sgd_with_momentum}所示，动量法\cite{Qian1999}可以通过消减这种无谓的震动来加速SGD。动量法的基本原理是在当前的参数更新向量上添加之前一次参数更新向量的一部分\footnote{有些算法实现中会采取不同的符号.}。
+如图\ref{fig:sgd_with_momentum}所示，动量法\cite{Qian1999}通过消减这种无谓的振荡来加速SGD。基本原理是在当前的参数更新向量上添加上一次参数更新向量的一部分\footnote{有些算法实现中会采取不同的符号.}。
 
 \begin{align}
 \begin{split}
@@ -264,17 +264,17 @@ The momentum term $\gamma$ is usually set to $0.9$ or a similar value.
 
 Essentially, when using momentum, we push a ball down a hill. The ball accumulates momentum as it rolls downhill, becoming faster and faster on the way (until it reaches its terminal velocity, if there is air resistance, i.e. $\gamma < 1$). The same thing happens to our parameter updates: The momentum term increases for dimensions whose gradients point in the same directions and reduces updates for dimensions whose gradients change directions. As a result, we gain faster convergence and reduced oscillation.
 
-动量法本质上就像是从山顶推一个球下山。球在向下滚动的过程中积累动量速度越来越快(如果存在空气阻力时，也就是$\gamma < 1$的情况，最终会达到平衡速度)。我们的参数更新也是同样的情况: 动量项在那些梯度符号比较一致的方向上不断积累，而在那些梯度经常改变符号的方向上相互抵销，这帮助我们降低震荡从而加快迭代收敛速度。
+本质上，动量法就像是从山顶推一个球下山，球在向下滚动的过程中累积动量速度越来越快(如果存在空气阻力时，也就是$\gamma < 1$的情况，最终会达到平衡速度)。我们的参数更新与之类似: 动量项在那些梯度符号比较一致的方向上不断积累，而在那些梯度经常改变符号的方向上相互抵销，这帮助我们降低震荡从而加快迭代收敛速度。
 
 \subsection{Nesterov accelerated gradient}
 
 However, a ball that rolls down a hill, blindly following the slope, is highly unsatisfactory. We would like to have a smarter ball, a ball that has a notion of where it is going so that it knows to slow down before the hill slopes up again.
 
-但是一个从山顶滚下越滚越快的球并不能满足我们的需求，我们希望这个球更加聪明一些，使得它在到达底部并再次上升之前就开始自动减速。
+但是一个盲目沿着坡度从山顶滚下的球并不能满足我们的需求，我们希望这个球更加聪明一些，使得它在到达底部并再次上升之前就开始自动减速。
 
 Nesterov accelerated gradient (NAG) \cite{Nesterov} is a way to give our momentum term this kind of prescience. We know that we will use our momentum term $\gamma \: v_{t-1}$ to move the parameters $\theta$. Computing $\theta - \gamma \: v_{t-1}$ thus gives us an approximation of the next position of the parameters (the gradient is missing for the full update), a rough idea where our parameters are going to be. We can now effectively look ahead by calculating the gradient not w.r.t. to our current parameters $\theta$ but w.r.t. the approximate future position of our parameters:
 
-Nesterov accelerated gradient (NAG) \cite{Nesterov} 就可以赋予我们的动量项这样的先见之明。因为我们知道在第$t$次更新中将会用到动量项$\gamma \: v_{t-1}$, 所以$\theta - \gamma \: v_{t-1}$就给出了参数向量下一个位置的粗略估计。所以我们与其在$\theta$处计算梯度，还不如在这个粗略估计的下一个位置计算梯度。
+Nesterov accelerated gradient (NAG) \cite{Nesterov} 就可以赋予动量项这样的先见之明。我们知道在第$t$次更新中将会用到动量项$\gamma \: v_{t-1}$, 所以$\theta - \gamma \: v_{t-1}$就给出了参数向量下一个位置的粗略估计。所以我们与其在$\theta$处计算梯度，还不如在这个粗略估计的下一个位置计算梯度。
 
 \begin{align}
 \begin{split}
@@ -289,7 +289,7 @@ Again, we set the momentum term $\gamma$ to a value of around $0.9$. While Momen
 
 Now that we are able to adapt our updates to the slope of our error function and speed up SGD in turn, we would also like to adapt our updates to each individual parameter to perform larger or smaller updates depending on their importance.
 
-现在我们可以让我们的参数更新自动适应误差函数的斜率，并确实加速了SGD的收敛。但是另一方面，我们也希望能够让我们的参数更新适应每一个参数，根据他们各自的重要性来决定每一个更新的幅度大小。
+现在我们可以让我们的参数更新自动适应误差函数的斜率，并确实加速了SGD的收敛。但是另一方面，我们也希望能够让我们的参数更新适应每一个参数，根据他们各自的重要性来决定每一个参数更新的幅度大小。
 
 \begin{figure}
 	\centering
@@ -303,7 +303,7 @@ http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf}{G. Hint
 
 Adagrad \cite{Duchi2011} is an algorithm for gradient-based optimization that does just this: It adapts the learning rate to the parameters, performing larger updates for infrequent and smaller updates for frequent parameters. For this reason, it is well-suited for dealing with sparse data. Dean et al. \cite{Dean2012} have found that Adagrad greatly improved the robustness of SGD and used it for training large-scale neural nets at Google, which -- among other things -- learned to recognize cats in Youtube videos\footnote{\url{http://www.wired.com/2012/06/google-x-neural-network/}}. Moreover, Pennington et al. \cite{Pennington2014} used Adagrad to train GloVe word embeddings, as infrequent words require much larger updates than frequent ones.
 
-Adagrad \cite{Duchi2011} 恰是如此：他是一种可以根据参数的重要性来调整学习率的算法，对于常常更新的参数使用较小的学习率，而对于很少得到更新的参数使用较大的学习率。所以这种方法很适合于稀疏性很强的数据集。 Dean et al. \cite{Dean2012} 发现Adarad 可以大大提升SGD的鲁棒性，于是将其应用于Google的大规模神经网络训练中，并和其他的算法一起实现了在YouTube视频中对猫的自动识别\footnote{\url{http://www.wired.com/2012/06/google-x-neural-network/}}。另外Pennington et al. \cite{Pennington2014}使用Adagrad 对GloVe 词语嵌入进行训练，因为在这种情况下不常出现的词语需要比经常出现的词语更大的学习率。
+Adagrad \cite{Duchi2011} 恰是如此：他是一种可以根据参数的重要性来调整学习率的算法，对于频繁更新的参数使用较小的学习率，对于很少得到更新的参数采用较大的学习率。所以这种方法很适合于稀疏数据集。 Dean et al. \cite{Dean2012} 发现Adarad 可以极大地提升SGD的鲁棒性，于是将其应用于Google的大规模神经网络训练中，并和其他的算法一起实现了在YouTube视频中对猫的自动识别\footnote{\url{http://www.wired.com/2012/06/google-x-neural-network/}}。另外Pennington et al. \cite{Pennington2014}使用Adagrad 对GloVe 词语嵌入进行训练，因为在这种情况下不常出现的词语需要比经常出现的词语更大的学习率。
 
 Previously, we performed an update for all parameters $\theta$ at once as every parameter $\theta_i$ used the same learning rate $\eta$. As Adagrad uses a different learning rate for every parameter $\theta_i$ at every time step $t$, we first show Adagrad's per-parameter update, which we then vectorize. For brevity, we set $g_{t, i}$ to be the gradient of the objective function w.r.t. to the parameter $\theta_i$ at time step $t$:
 
